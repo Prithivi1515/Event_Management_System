@@ -14,9 +14,13 @@ import com.example.demo.model.Notification;
 import com.example.demo.repository.NotificationRepository;
 
 import com.example.demo.dto.Event;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class RemainderScheduler {
+
+    private static final Logger logger = LoggerFactory.getLogger(RemainderScheduler.class);
 
     @Autowired
     TicketClient ticketClient;
@@ -30,9 +34,18 @@ public class RemainderScheduler {
     // Every minute
     @Scheduled(fixedRate = 60000)
     public void sendRemainderForUpcomingEvents() {
-        List<Ticket> allTickets = ticketClient.getAllTickets();
+        logger.info("Starting scheduled task to send reminders for upcoming events.");
+
+        List<Ticket> allTickets;
+        try {
+            allTickets = ticketClient.getAllTickets();
+        } catch (Exception e) {
+            logger.error("Failed to fetch tickets from TicketClient: {}", e.getMessage());
+            return;
+        }
+
         if (allTickets == null || allTickets.isEmpty()) {
-            System.out.println("No tickets found.");
+            logger.info("No tickets found.");
             return;
         }
 
@@ -41,15 +54,27 @@ public class RemainderScheduler {
 
         for (Ticket ticket : allTickets) {
             try {
-                Event event = eventClient.getEventById(ticket.getEventId());
-                if (event == null) {
-                    System.out.println("Event not found for ticket ID: " + ticket.getTicketId());
+                if (ticket.getEventId() <= 0 || ticket.getUserId() <= 0) {
+                    logger.warn("Invalid ticket data: {}", ticket);
                     continue;
                 }
 
-                LocalDateTime eventDateTime = event.getDate(); // Fixed the incorrect method call
+                Event event;
+                try {
+                    event = eventClient.getEventById(ticket.getEventId());
+                } catch (Exception e) {
+                    logger.error("Failed to fetch event details for event ID {}: {}", ticket.getEventId(), e.getMessage());
+                    continue;
+                }
+
+                if (event == null) {
+                    logger.warn("Event not found for ticket ID: {}", ticket.getTicketId());
+                    continue;
+                }
+
+                LocalDateTime eventDateTime = event.getDate();
                 if (eventDateTime == null) {
-                    System.out.println("Event date is null for event ID: " + ticket.getEventId());
+                    logger.warn("Event date is null for event ID: {}", ticket.getEventId());
                     continue;
                 }
 
@@ -68,13 +93,17 @@ public class RemainderScheduler {
                                 .timestamp(LocalDateTime.now())
                                 .build();
                         repository.save(notification);
-                        System.out.println("Notification sent for ticket ID: " + ticket.getTicketId());
+                        logger.info("Notification sent for ticket ID: {}", ticket.getTicketId());
+                    } else {
+                        logger.info("Notification already exists for ticket ID: {}", ticket.getTicketId());
                     }
                 }
             } catch (Exception e) {
-                System.err.println("Error processing ticket ID: " + ticket.getTicketId() + " - " + e.getMessage());
-                e.printStackTrace(); // Log the full stack trace for debugging
+                logger.error("Error processing ticket ID {}: {}", ticket.getTicketId(), e.getMessage());
+                logger.debug("Stack trace: ", e);
             }
         }
+
+        logger.info("Scheduled task to send reminders completed.");
     }
 }
