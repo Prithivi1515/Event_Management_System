@@ -2,13 +2,13 @@ package com.example.demo.feignclient;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name="NOTIFICATIONSERVICE",path="/notification")
+import com.example.demo.dto.NotificationRequest;
+
+@FeignClient(name = "NOTIFICATIONSERVICE", path = "/notification")
 public interface NotificationClient {
 
-
     @PostMapping("/sendNotification")
-    public void sendNotification(@RequestParam("userId") int userId,@RequestParam("eventId") int eventId,@RequestParam("message") String message);
-
+    public void sendNotification(@RequestBody NotificationRequest notificationRequest);
 }

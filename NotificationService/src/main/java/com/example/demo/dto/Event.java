@@ -11,9 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Event {
     private int eventId;
-    private String eventName;
-    private LocalDateTime eventDate; 
-    private String eventLocation;
-    private String eventDescription;
-    private int eventPrice;
+    private String name;
+    private String category;
+    private String location;
+    private LocalDateTime date;
+    private int organizerId;
+    private int ticketCount;
 }

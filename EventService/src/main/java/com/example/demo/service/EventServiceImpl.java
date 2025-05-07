@@ -25,7 +25,7 @@ public class EventServiceImpl implements EventService {
 	@Override
 	public Event getEventById(int eid) {
 		return repository.findById(eid)
-				.orElseThrow(() -> new RuntimeException("Event not found with Id: "+eid));
+				.orElseThrow(() -> new RuntimeException("Event not found with Id: " + eid));
 	}
 
 	@Override
@@ -35,7 +35,9 @@ public class EventServiceImpl implements EventService {
 
 	@Override
 	public String deleteEvent(int eid) {
-		repository.deleteById(eid);
+		Event event = repository.findById(eid)
+				.orElseThrow(() -> new RuntimeException("Event not found with Id: " + eid));
+		repository.delete(event);
 		return "Event Deleted";
 	}
 
@@ -52,24 +54,22 @@ public class EventServiceImpl implements EventService {
 	@Override
 	public void decreaseTicketCount(int eventId) {
 		Event event = repository.findById(eventId)
-				.orElseThrow(() -> new RuntimeException("Event not found with Id: "+eventId));
+				.orElseThrow(() -> new RuntimeException("Event not found with Id: " + eventId));
 		int currentCount = event.getTicketCount();
 		if (currentCount > 0) {
 			event.setTicketCount(currentCount - 1);
 			repository.save(event);
 		} else {
-			throw new RuntimeException("No tickets available for event with Id: "+eventId);
+			throw new RuntimeException("No tickets available for event with Id: " + eventId);
 		}
 	}
 
 	@Override
 	public void increaseTicketCount(int eventId) {
 		Event event = repository.findById(eventId)
-				.orElseThrow(() -> new RuntimeException("Event not found with Id: "+eventId));
+				.orElseThrow(() -> new RuntimeException("Event not found with Id: " + eventId));
 		int currentCount = event.getTicketCount();
 		event.setTicketCount(currentCount + 1);
 		repository.save(event);
-		
 	}
-
 }

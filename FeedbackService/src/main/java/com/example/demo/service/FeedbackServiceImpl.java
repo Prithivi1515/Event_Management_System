@@ -81,5 +81,17 @@ public class FeedbackServiceImpl implements FeedbackService {
         return feedbacks.toString();
     }
 
+    @Override
+    public float getAverageRatingByEvent(int eventId) {
+        List<Feedback> feedbacks = feedbackRepository.findByEventId(eventId);
+        if (feedbacks.isEmpty()) {
+            return 0;
+        }
+        float totalRating = 0;
+        for (Feedback feedback : feedbacks) {
+            totalRating += feedback.getRating();
+        }
+        return totalRating / feedbacks.size();
+    }
     
 }

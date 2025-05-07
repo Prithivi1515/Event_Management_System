@@ -14,4 +14,6 @@ public interface FeedbackService {
     public abstract String getAllFeedbacksByUser(int userId);
     
     public abstract String getAllFeedbacksByEvent(int eventId);
+
+    public abstract float getAverageRatingByEvent(int eventId);
 }

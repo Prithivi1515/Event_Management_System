@@ -43,11 +43,11 @@ public class RemainderScheduler {
             try {
                 Event event = eventClient.getEventById(ticket.getEventId());
                 if (event == null) {
-                    System.out.println("Event not found for ticket ID: " + ticket.getEventId());
+                    System.out.println("Event not found for ticket ID: " + ticket.getTicketId());
                     continue;
                 }
 
-                LocalDateTime eventDateTime = event.getEventDate(); 
+                LocalDateTime eventDateTime = event.getDate(); // Fixed the incorrect method call
                 if (eventDateTime == null) {
                     System.out.println("Event date is null for event ID: " + ticket.getEventId());
                     continue;

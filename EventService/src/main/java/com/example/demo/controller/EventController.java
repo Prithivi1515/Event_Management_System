@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,60 +18,55 @@ import com.example.demo.service.EventService;
 @RestController
 @RequestMapping("/event")
 public class EventController {
-	
-	@Autowired
-	EventService service;
-	
-	@PostMapping("/create")
-	public String createEvent(@RequestBody Event event)
-	{
-		service.createEvent(event);
-		return "Event Created";
-	}
 
-	@GetMapping("/getEventById/{eid}")
-	public Event getEventById(@PathVariable("eid") int eid)
-	{
-		return service.getEventById(eid);
-	}
+    @Autowired
+    EventService service;
 
-	@GetMapping("/getAllEvents")
-	public List<Event> getAllEvents()
-	{
-		return service.getAllEvents();
-	}
+    @PostMapping("/create")
+    public ResponseEntity<String> createEvent(@RequestBody Event event) {
+        service.createEvent(event);
+        return ResponseEntity.ok("Event Created");
+    }
 
-	@DeleteMapping("/deleteEventById/{eid}")
-	public String deleteEvent(@PathVariable("eid") int eid)
-	{
-		service.deleteEvent(eid);
-		return "Event Deleted";
-	}
+    @GetMapping("/getEventById/{eid}")
+    public ResponseEntity<Event> getEventById(@PathVariable("eid") int eid) {
+        Event event = service.getEventById(eid);
+        return ResponseEntity.ok(event);
+    }
 
-	@PostMapping("/filterByCategory/{category}")
-	public List<Event> filterByCategory(@PathVariable("category") String category)
-	{
-		return service.filterByCategory(category);
-	}
+    @GetMapping("/getAllEvents")
+    public ResponseEntity<List<Event>> getAllEvents() {
+        List<Event> events = service.getAllEvents();
+        return ResponseEntity.ok(events);
+    }
 
-	@PostMapping("/filterByLocation/{location}")
-	public List<Event> filterByLocation(@PathVariable("location") String location)
-	{
-		return service.filterByLocation(location);
-	}
-	
-	@PostMapping("/decreaseTicketCount/{id}")
-	public void decreaseTicketCount(@PathVariable("id") int eventId)
-	{
-		service.decreaseTicketCount(eventId);
-	}
-	
-	
-	@PostMapping("/increaseTicketCount/{id}")
-	public void increaseTicketCount(@PathVariable("id") int eventId)
-	{
-		service.increaseTicketCount(eventId);
-	}
-	
+    @DeleteMapping("/deleteEventById/{eid}")
+    public ResponseEntity<String> deleteEvent(@PathVariable("eid") int eid) {
+        service.deleteEvent(eid);
+        return ResponseEntity.ok("Event Deleted");
+    }
 
+    @GetMapping("/filterByCategory/{category}") // Changed to @GetMapping
+    public ResponseEntity<List<Event>> filterByCategory(@PathVariable("category") String category) {
+        List<Event> events = service.filterByCategory(category);
+        return ResponseEntity.ok(events);
+    }
+
+    @GetMapping("/filterByLocation/{location}") // Changed to @GetMapping
+    public ResponseEntity<List<Event>> filterByLocation(@PathVariable("location") String location) {
+        List<Event> events = service.filterByLocation(location);
+        return ResponseEntity.ok(events);
+    }
+
+    @PostMapping("/decreaseTicketCount/{id}")
+    public ResponseEntity<String> decreaseTicketCount(@PathVariable("id") int eventId) {
+        service.decreaseTicketCount(eventId);
+        return ResponseEntity.ok("Ticket count decreased successfully");
+    }
+
+    @PostMapping("/increaseTicketCount/{id}")
+    public ResponseEntity<String> increaseTicketCount(@PathVariable("id") int eventId) {
+        service.increaseTicketCount(eventId);
+        return ResponseEntity.ok("Ticket count increased successfully");
+    }
 }

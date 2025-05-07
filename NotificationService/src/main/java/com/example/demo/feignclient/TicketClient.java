@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.example.demo.dto.Ticket;
 
-@FeignClient(name ="TICKETSERVICE", path = "/ticket") 
+@FeignClient(name="TICKETSERVICE", path ="/ticket") 
 public interface TicketClient {
 
     @GetMapping("/getTicketById/{id}")

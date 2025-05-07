@@ -56,6 +56,12 @@ public class FeedbackController {
         return service.getAllFeedbacksByEvent(eventId);
     }
 
+    @GetMapping("/getAverageRatingByEvent/{eid}")
+    public float getAverageRatingByEvent(@PathVariable("eid") int eventId)
+    {
+        return service.getAverageRatingByEvent(eventId);
+    }
+
 
     
 

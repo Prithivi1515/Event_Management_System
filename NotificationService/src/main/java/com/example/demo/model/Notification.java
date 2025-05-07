@@ -18,12 +18,13 @@ import lombok.NoArgsConstructor;
 @Entity
 @Builder
 public class Notification {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "notification_id", nullable = false)
-	private int notificationId;
-	private int userId;
-	private int eventId;
-	private String message;
-	private LocalDateTime timestamp;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "notification_id", nullable = false)
+    private int notificationId;
+    private int userId;
+    private int eventId;
+    private String message;
+    @Builder.Default // Ensures default value is set when using the builder
+    private LocalDateTime timestamp = LocalDateTime.now();
 }

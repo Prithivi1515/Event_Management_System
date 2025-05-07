@@ -6,23 +6,19 @@ import com.example.demo.model.Event;
 
 public interface EventService {
 
-	public abstract String createEvent(Event event);
+    public abstract String createEvent(Event event);
 
-	public abstract Event getEventById(int eid);
+    public abstract Event getEventById(int eid);
 
-	public abstract List<Event> getAllEvents();
+    public abstract List<Event> getAllEvents();
 
-	public abstract String deleteEvent(int eid);
+    public abstract String deleteEvent(int eid);
 
-	public abstract List<Event> filterByCategory(String category);
+    public abstract List<Event> filterByCategory(String category);
 
-	public abstract List<Event> filterByLocation(String location);
-	
-	public abstract void decreaseTicketCount(int eventId);
-	
-	public abstract void increaseTicketCount(int eventId);
+    public abstract List<Event> filterByLocation(String location);
 
-	
-	
+    public abstract void decreaseTicketCount(int eventId) throws IllegalArgumentException;
 
+    public abstract void increaseTicketCount(int eventId) throws IllegalArgumentException;
 }

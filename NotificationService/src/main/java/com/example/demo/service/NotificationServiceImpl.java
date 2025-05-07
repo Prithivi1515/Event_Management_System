@@ -36,6 +36,11 @@ public class NotificationServiceImpl implements NotificationService {
             throw new IllegalArgumentException("Invalid input parameters: userId, eventId, or message.");
         }
 
+        // Check for duplicate notification
+        if (notificationRepository.existsByUserIdAndEventIdAndMessage(userId, eventId, message)) {
+            throw new RuntimeException("Duplicate notification already exists for userId: " + userId + ", eventId: " + eventId);
+        }
+
         try {
             // Fetch user and event details using Feign clients
             User user = userClient.getUserById(userId);
