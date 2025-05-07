@@ -17,7 +17,6 @@ public class EventServiceImpl implements EventService {
 
 	@Override
 	public String createEvent(Event event) {
-		event.setDate(LocalDateTime.now());
 		repository.save(event);
 		return "Event created";
 	}

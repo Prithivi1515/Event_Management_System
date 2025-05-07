@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Event {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Added ID generation strategy
+    @GeneratedValue
     private int eventId;
     private String name;
     private String category;
@@ -25,3 +25,4 @@ public class Event {
     private int organizerId;
     private int ticketCount;
 }
+

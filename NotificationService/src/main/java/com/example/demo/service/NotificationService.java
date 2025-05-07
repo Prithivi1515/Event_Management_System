@@ -6,9 +6,7 @@ import com.example.demo.model.Notification;
 
 public interface NotificationService {
 
- 
-    public abstract Notification sendNotification(int userId, int eventId, String message);
+    Notification sendNotification(Notification notification);
 
-    public abstract List<Notification> getAllNotificationsByUserId(int userId);
-        
+    List<Notification> getAllNotificationsByUserId(int userId);
 }
