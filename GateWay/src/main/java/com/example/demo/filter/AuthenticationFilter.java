@@ -59,12 +59,38 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         };
     }
 
+    //there are 3 roles: ADMIN, ORGANIZER, USER
+    // ADMIN can access all endpoints
+    // ORGANIZER can access update user, create event, update event, delete event,get feedback by event, get average rating by event, get all tickets by event id, get all feedbacks by event id, get all tickets by user id
+    // USER can access update user, get all events, get event by id, get all tickets, get ticket by id, get all feedbacks, get feedback by id, get all notifications, get notification by id
+
     private boolean isAuthorized(String role, String path, String method) {
         if ("ADMIN".equalsIgnoreCase(role)) {
-            return path.startsWith("/user") || path.startsWith("/event");
-        } else if ("USER".equalsIgnoreCase(role)) {
-            return (path.startsWith("/event") || path.startsWith("/ticket")) && "GET".equalsIgnoreCase(method);
+            return path.startsWith("/user") || path.startsWith("/event")
+            || path.startsWith("/ticket") || path.startsWith("/feedback") 
+            || path.startsWith("/notification");
+        } 
+        else if ("ORGANIZER".equalsIgnoreCase(role)) {
+            return path.startsWith("/user/update") || path.startsWith("/event/create")
+            || path.startsWith("/event/update") || path.startsWith("/event/delete")
+            || path.startsWith("/event/getAllEvents") 
+            || path.startsWith("/feedback/getAllFeedbacksByEvent") 
+            || path.startsWith("/feedback/getAverageRatingByEvent") 
+            || path.startsWith("/ticket/getAllTicketsByEventId") 
+            || path.startsWith("/feedback/getAllFeedbacksByEvent") ;
+
         }
+        else if ("USER".equalsIgnoreCase(role)) {
+            return path.startsWith("/user/update") || path.startsWith("/event/getAllEvents")
+            || path.startsWith("/event/getEventById") || path.startsWith("/ticket/book")
+            || path.startsWith("/ticket/getTicketById") || path.startsWith("/event/filterByCategory")
+            || path.startsWith("/event/filterByLocation") 
+            || path.startsWith("/event/getTicketByUserId") || path.startsWith("/ticket/cancel") 
+            || path.startsWith("/feedback/save") || path.startsWith("/feedback/update")
+            || path.startsWith("/feedback/delete") || path.startsWith("/feedback/getAllFeedbacksByUser")
+            || path.startsWith("/feedback/getById") || path.startsWith("/notification//getAllNotificationsByUserId");
+        }
+
         return false;
     }
 
