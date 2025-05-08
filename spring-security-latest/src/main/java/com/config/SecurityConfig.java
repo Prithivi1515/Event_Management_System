@@ -1,4 +1,4 @@
- package com.config;
+package com.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -23,26 +23,23 @@ import com.filter.JwtAuthFilter;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
     @Autowired
     private JwtAuthFilter authFilter;
 
-    //authentication
-    @Bean
-    UserDetailsService userDetailsService() {
-        return new UserInfoUserDetailsService();
-    }
+    @Autowired
+    private UserDetailsService userDetailsService;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.csrf(csrf -> csrf.disable())
+        return http.csrf(csrf -> csrf.disable()) // Disable CSRF for stateless APIs
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/auth/authenticate", "/auth/getroles/**", "/auth/**").permitAll())
-                .authorizeHttpRequests(requests -> requests.requestMatchers("/employee/**","/department/**")
-                        .authenticated())
+                        .requestMatchers("/auth/authenticate", "/auth/getroles/**", "/auth/**").permitAll()
+                        .requestMatchers("/employee/**", "/department/**").authenticated())
                 .sessionManagement(management -> management
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session management
+                .authenticationProvider(authenticationProvider()) // Set custom authentication provider
+                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class) // Add JWT filter
                 .build();
     }
 
@@ -52,9 +49,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    AuthenticationProvider authenticationProvider(){
-        DaoAuthenticationProvider authenticationProvider=new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService());
+    AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+        authenticationProvider.setUserDetailsService(userDetailsService); // Use injected UserDetailsService
         authenticationProvider.setPasswordEncoder(passwordEncoder());
         return authenticationProvider;
     }
@@ -63,5 +60,4 @@ public class SecurityConfig {
     AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
 }

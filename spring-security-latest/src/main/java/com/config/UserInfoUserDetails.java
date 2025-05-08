@@ -2,6 +2,7 @@ package com.config;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,17 +14,27 @@ import com.entity.UserInfo;
 
 public class UserInfoUserDetails implements UserDetails {
 
-
     private String name;
     private String password;
     private List<GrantedAuthority> authorities;
 
     public UserInfoUserDetails(UserInfo userInfo) {
-        name=userInfo.getName();
-        password=userInfo.getPassword();
-        authorities= Arrays.stream(userInfo.getRoles().split(","))
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
+        if (userInfo == null) {
+            throw new IllegalArgumentException("UserInfo cannot be null");
+        }
+
+        this.name = userInfo.getName();
+        this.password = userInfo.getPassword();
+
+        // Safely process roles
+        if (userInfo.getRoles() != null && !userInfo.getRoles().isEmpty()) {
+            this.authorities = Arrays.stream(userInfo.getRoles().split(","))
+                    .map(String::trim) // Trim whitespace from roles
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList());
+        } else {
+            this.authorities = Collections.emptyList(); // No roles assigned
+        }
     }
 
     @Override
