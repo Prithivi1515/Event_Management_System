@@ -3,11 +3,15 @@ package com.example.demo.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.Event;
 import com.example.demo.dto.NotificationRequest;
+import com.example.demo.exception.EventNotFoundException;
+import com.example.demo.exception.TicketNotFoundException;
 import com.example.demo.feignclient.EventClient;
 import com.example.demo.feignclient.NotificationClient;
 import com.example.demo.model.Ticket;
@@ -17,25 +21,38 @@ import com.example.demo.repository.TicketRepository;
 @Service
 public class TicketServiceImpl implements TicketService {
 
-    @Autowired
-    TicketRepository repository;
+    private static final Logger logger = LoggerFactory.getLogger(TicketServiceImpl.class);
 
     @Autowired
-    EventClient eventClient;
+    private TicketRepository repository;
 
     @Autowired
-    NotificationClient notificationClient;
+    private EventClient eventClient;
+
+    @Autowired
+    private NotificationClient notificationClient;
 
     @Override
     public Ticket bookTicket(Ticket ticket) {
+        // Check if the event exists
         Event event = eventClient.getEventById(ticket.getEventId());
         if (event == null) {
-            throw new RuntimeException("Event not found with Id: " + ticket.getEventId());
+            logger.error("Event not found with ID: {}", ticket.getEventId());
+            throw new EventNotFoundException("Event not found with ID: " + ticket.getEventId());
         }
+
+        // Check for duplicate ticket booking
+        if (repository.existsByUserIdAndEventId(ticket.getUserId(), ticket.getEventId())) {
+            logger.error("Duplicate ticket booking attempt for userId: {}, eventId: {}", ticket.getUserId(), ticket.getEventId());
+            throw new IllegalArgumentException("Ticket already booked for userId: " + ticket.getUserId() + " and eventId: " + ticket.getEventId());
+        }
+
+        // Decrease ticket count and set ticket details
         eventClient.decreaseTicketCount(ticket.getEventId());
         ticket.setBookingDate(LocalDateTime.now());
         ticket.setStatus(Status.BOOKED);
 
+        // Send notification
         try {
             NotificationRequest notificationRequest = new NotificationRequest(
                 ticket.getUserId(),
@@ -44,7 +61,7 @@ public class TicketServiceImpl implements TicketService {
             );
             notificationClient.sendNotification(notificationRequest);
         } catch (Exception e) {
-            System.out.println("Failed to send Notification: " + e.getMessage());
+            logger.error("Failed to send notification for ticket booking: {}", e.getMessage(), e);
         }
 
         return repository.save(ticket);
@@ -53,7 +70,7 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public Ticket getTicketById(int ticketId) {
         return repository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Ticket not found with Id: " + ticketId));
+                .orElseThrow(() -> new TicketNotFoundException("Ticket not found with ID: " + ticketId));
     }
 
     @Override
@@ -67,21 +84,30 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public void cancelTicket(int ticketId) { // Changed return type to void
+    public void cancelTicket(int ticketId) {
         Ticket ticket = getTicketById(ticketId);
+
+        // Check if the ticket is already canceled
+        if (ticket.getStatus() == Status.CANCELLED) {
+            logger.warn("Ticket with ID {} is already canceled", ticketId);
+            throw new IllegalArgumentException("Ticket with ID " + ticketId + " is already canceled.");
+        }
+
+        // Cancel the ticket and increase ticket count
         ticket.setStatus(Status.CANCELLED);
         eventClient.increaseTicketCount(ticket.getEventId());
         repository.save(ticket);
 
+        // Send notification
         try {
             NotificationRequest notificationRequest = new NotificationRequest(
                 ticket.getUserId(),
                 ticket.getEventId(),
-                "Your ticket has been successfully cancelled"
+                "Your ticket has been successfully canceled"
             );
             notificationClient.sendNotification(notificationRequest);
         } catch (Exception e) {
-            System.out.println("Failed to send Notification: " + e.getMessage());
+            logger.error("Failed to send notification for ticket cancellation: {}", e.getMessage(), e);
         }
     }
 

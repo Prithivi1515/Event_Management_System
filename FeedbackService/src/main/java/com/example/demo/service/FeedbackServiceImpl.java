@@ -15,83 +15,83 @@ import com.example.demo.repository.FeedbackRepository;
 
 @Service
 public class FeedbackServiceImpl implements FeedbackService {
+
     @Autowired
     private FeedbackRepository feedbackRepository;
-    
+
     @Autowired
-    EventClient eventClient;
-    
+    private EventClient eventClient;
+
     @Autowired
-    UserClient userClient;
+    private UserClient userClient;
+
     @Override
     public String saveFeedback(Feedback feedback) {
-    	
-    	User userid =userClient.getUserById(feedback.getUserId());
-		if (userid == null) {
-			throw new RuntimeException("Event not found with Id: " + feedback.getUserId());
-		}
+        // Validate user
+        User user = userClient.getUserById(feedback.getUserId());
+        if (user == null) {
+            throw new IllegalArgumentException("User not found with ID: " + feedback.getUserId());
+        }
 
-		Event event = eventClient.getEventById(feedback.getEventId());
-		if (event == null) {
-			throw new RuntimeException("Event not found with Id: " + feedback.getEventId());
-		}
-		feedback.setTimestamp(LocalDateTime.now());
+        // Validate event
+        Event event = eventClient.getEventById(feedback.getEventId());
+        if (event == null) {
+            throw new IllegalArgumentException("Event not found with ID: " + feedback.getEventId());
+        }
+
+        // Save feedback
+        feedback.setTimestamp(LocalDateTime.now());
         feedbackRepository.save(feedback);
         return "Feedback saved successfully!";
     }
 
     @Override
     public String updateFeedback(int feedbackId, Feedback feedback) {
-        Feedback existingFeedback = feedbackRepository.findById(feedbackId).orElse(null);
-        if (existingFeedback != null) {
-            existingFeedback.setComments(feedback.getComments());
-            existingFeedback.setRating(feedback.getRating());
-            feedbackRepository.save(existingFeedback);
-            return "Feedback updated successfully!";
-        } else {
-            return "Feedback not found!";
-        }
+        Feedback existingFeedback = feedbackRepository.findById(feedbackId)
+                .orElseThrow(() -> new IllegalArgumentException("Feedback not found with ID: " + feedbackId));
+
+        existingFeedback.setComments(feedback.getComments());
+        existingFeedback.setRating(feedback.getRating());
+        feedbackRepository.save(existingFeedback);
+        return "Feedback updated successfully!";
     }
 
     @Override
     public String deleteFeedback(int feedbackId) {
-        feedbackRepository.deleteById(feedbackId);
+        Feedback feedback = feedbackRepository.findById(feedbackId)
+                .orElseThrow(() -> new IllegalArgumentException("Feedback not found with ID: " + feedbackId));
+        feedbackRepository.delete(feedback);
         return "Feedback deleted successfully!";
     }
 
     @Override
     public String getFeedbackById(int feedbackId) {
-        Feedback feedback = feedbackRepository.findById(feedbackId).orElse(null);
-        if (feedback != null) {
-             return feedback.toString();
-         } else {
-             return "Feedback not found!";
-         }
+        Feedback feedback = feedbackRepository.findById(feedbackId)
+                .orElseThrow(() -> new IllegalArgumentException("Feedback not found with ID: " + feedbackId));
+        return feedback.toString();
     }
 
     @Override
     public String getAllFeedbacksByUser(int userId) {
         List<Feedback> feedbacks = feedbackRepository.findByUserId(userId);
+        if (feedbacks.isEmpty()) {
+            return "No feedback found for user with ID: " + userId;
+        }
         return feedbacks.toString();
     }
 
     @Override
     public String getAllFeedbacksByEvent(int eventId) {
         List<Feedback> feedbacks = feedbackRepository.findByEventId(eventId);
+        if (feedbacks.isEmpty()) {
+            return "No feedback found for event with ID: " + eventId;
+        }
         return feedbacks.toString();
     }
 
     @Override
     public float getAverageRatingByEvent(int eventId) {
-        List<Feedback> feedbacks = feedbackRepository.findByEventId(eventId);
-        if (feedbacks.isEmpty()) {
-            return 0;
-        }
-        float totalRating = 0;
-        for (Feedback feedback : feedbacks) {
-            totalRating += feedback.getRating();
-        }
-        return totalRating / feedbacks.size();
+        double averageRating = feedbackRepository.findAverageRatingByEventId(eventId);
+        return (float) averageRating;
     }
-    
 }

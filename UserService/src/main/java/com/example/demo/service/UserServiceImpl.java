@@ -13,29 +13,40 @@ import com.example.demo.repository.UserRepository;
 public class UserServiceImpl implements UserService {
 
     @Autowired
-    UserRepository repository;
+    private UserRepository repository;
 
     @Override
     public String saveUser(User user) {
+        // Check for duplicate email
+        if (repository.findByEmail(user.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already exists: " + user.getEmail());
+        }
         repository.save(user);
-        return "Employee Saved !!!";
+        return "User saved successfully!";
     }
 
-    // Update user details
     @Override
     public String updateUser(int userId, User user) throws UserNotFoundException {
         User existingUser = repository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+
+        // Check for duplicate email (excluding the current user)
+        repository.findByEmail(user.getEmail()).ifPresent(existing -> {
+            if (existing.getUserId() != userId) {
+                throw new IllegalArgumentException("Email already exists: " + user.getEmail());
+            }
+        });
+
         existingUser.setName(user.getName());
         existingUser.setEmail(user.getEmail());
         repository.save(existingUser);
-        return "User updated successfully";
+        return "User updated successfully!";
     }
 
     @Override
     public User getUser(int userId) throws UserNotFoundException {
         return repository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
     }
 
     @Override
@@ -46,8 +57,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public String deleteUser(int userId) throws UserNotFoundException {
         User user = repository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Cannot delete, User not found"));
+                .orElseThrow(() -> new UserNotFoundException("Cannot delete, user not found with ID: " + userId));
         repository.delete(user);
-        return "User deleted";
+        return "User deleted successfully!";
     }
 }

@@ -6,13 +6,13 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.demo.feignclient.TicketClient;
-import com.example.demo.feignclient.UserClient;
 import com.example.demo.dto.Event;
 import com.example.demo.dto.User;
 import com.example.demo.feignclient.EventClient;
+import com.example.demo.feignclient.UserClient;
 import com.example.demo.model.Notification;
 import com.example.demo.repository.NotificationRepository;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,16 +22,13 @@ public class NotificationServiceImpl implements NotificationService {
     private static final Logger logger = LoggerFactory.getLogger(NotificationServiceImpl.class);
 
     @Autowired
-    NotificationRepository notificationRepository;
+    private NotificationRepository notificationRepository;
 
     @Autowired
-    UserClient userClient;
+    private UserClient userClient;
 
     @Autowired
-    EventClient eventClient;
-
-    @Autowired
-    TicketClient ticketClient;
+    private EventClient eventClient;
 
     @Override
     public Notification sendNotification(Notification notification) {
@@ -44,29 +41,30 @@ public class NotificationServiceImpl implements NotificationService {
             throw new IllegalArgumentException("Invalid input parameters: userId, eventId, or message.");
         }
 
-        // Check for duplicate notification
-        if (notificationRepository.existsByUserIdAndEventIdAndMessage(
-                notification.getUserId(), notification.getEventId(), notification.getMessage())) {
-            logger.error("Duplicate notification exists for userId: {}, eventId: {}", 
-                         notification.getUserId(), notification.getEventId());
-            throw new RuntimeException("Duplicate notification already exists for userId: " + 
-                                        notification.getUserId() + ", eventId: " + notification.getEventId());
-        }
-
         try {
-            // Fetch user and event details using Feign clients
+            // Fetch user details
             logger.info("Fetching user details for userId: {}", notification.getUserId());
             User user = userClient.getUserById(notification.getUserId());
             if (user == null) {
                 logger.error("User not found with Id: {}", notification.getUserId());
-                throw new RuntimeException("User not found with Id: " + notification.getUserId());
+                throw new IllegalArgumentException("User not found with Id: " + notification.getUserId());
             }
 
+            // Fetch event details
             logger.info("Fetching event details for eventId: {}", notification.getEventId());
             Event event = eventClient.getEventById(notification.getEventId());
             if (event == null) {
                 logger.error("Event not found with Id: {}", notification.getEventId());
-                throw new RuntimeException("Event not found with Id: " + notification.getEventId());
+                throw new IllegalArgumentException("Event not found with Id: " + notification.getEventId());
+            }
+
+            // Check for duplicate notification
+            if (notificationRepository.existsByUserIdAndEventIdAndMessage(
+                    notification.getUserId(), notification.getEventId(), notification.getMessage())) {
+                logger.error("Duplicate notification exists for userId: {}, eventId: {}", 
+                             notification.getUserId(), notification.getEventId());
+                throw new IllegalArgumentException("Duplicate notification already exists for userId: " + 
+                                                   notification.getUserId() + ", eventId: " + notification.getEventId());
             }
 
             // Add timestamp and save the notification
@@ -75,8 +73,11 @@ public class NotificationServiceImpl implements NotificationService {
             logger.info("Notification successfully sent: {}", savedNotification);
             return savedNotification;
 
+        } catch (IllegalArgumentException e) {
+            logger.error("Validation error while sending notification: {}", e.getMessage());
+            throw e;
         } catch (Exception e) {
-            logger.error("Error while sending notification: {}", e.getMessage(), e);
+            logger.error("Unexpected error while sending notification: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to send notification", e);
         }
     }
@@ -84,14 +85,16 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public List<Notification> getAllNotificationsByUserId(int userId) {
         if (userId <= 0) {
+            logger.error("Invalid userId: {}", userId);
             throw new IllegalArgumentException("Invalid userId: " + userId);
         }
 
         try {
-            return notificationRepository.findByUserId(userId);
+            List<Notification> notifications = notificationRepository.findByUserId(userId);
+            logger.info("Fetched {} notifications for userId: {}", notifications.size(), userId);
+            return notifications;
         } catch (Exception e) {
-            // Log the error and rethrow it
-            System.err.println("Error while fetching notifications for userId: " + userId + " - " + e.getMessage());
+            logger.error("Error while fetching notifications for userId: {}", userId, e);
             throw new RuntimeException("Failed to fetch notifications", e);
         }
     }

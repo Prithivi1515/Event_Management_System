@@ -6,11 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.model.Notification;
 import com.example.demo.service.NotificationService;
@@ -20,7 +20,7 @@ import com.example.demo.service.NotificationService;
 public class NotificationController {
 
     @Autowired
-    NotificationService service;
+    private NotificationService service;
 
     @PostMapping("/sendNotification")
     public ResponseEntity<String> sendNotification(@RequestBody Notification notificationRequest) {
@@ -28,46 +28,41 @@ public class NotificationController {
             Notification notification = service.sendNotification(notificationRequest);
 
             if (notification == null) {
-                // Handle duplicate notification case
-                String errorMessage = "Duplicate notification already exists for user ID: " + notificationRequest.getUserId() +
-                                      " and event ID: " + notificationRequest.getEventId();
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorMessage);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("Duplicate notification already exists for user ID: " + notificationRequest.getUserId() +
+                              " and event ID: " + notificationRequest.getEventId());
             }
 
-            String responseMessage = "Notification sent to user with ID: " + notification.getUserId() +
-                                     " for event with ID: " + notification.getEventId() +
-                                     " with message: " + notification.getMessage();
-            return ResponseEntity.ok(responseMessage);
-
+            return ResponseEntity.ok("Notification sent successfully to user ID: " + notification.getUserId() +
+                                     " for event ID: " + notification.getEventId() +
+                                     " with message: " + notification.getMessage());
         } catch (IllegalArgumentException e) {
-            // Handle invalid input parameters
-            String errorMessage = "Invalid input: " + e.getMessage();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid input: " + e.getMessage());
         } catch (Exception e) {
-            // Handle unexpected errors
-            String errorMessage = "An error occurred while sending the notification: " + e.getMessage();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMessage);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while sending the notification: " + e.getMessage());
         }
     }
 
     @GetMapping("/getAllNotificationsByUserId")
-    public ResponseEntity<List<Notification>> getAllNotificationsByUserId(@RequestParam(name = "userId") int userId) {
+    public ResponseEntity<?> getAllNotificationsByUserId(@RequestParam(name = "userId") int userId) {
         try {
             if (userId <= 0) {
                 throw new IllegalArgumentException("User ID must be greater than 0.");
             }
 
             List<Notification> notifications = service.getAllNotificationsByUserId(userId);
-            return ResponseEntity.ok(notifications);
+            if (notifications.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("No notifications found for user ID: " + userId);
+            }
 
+            return ResponseEntity.ok(notifications);
         } catch (IllegalArgumentException e) {
-            // Handle invalid user ID
-            String errorMessage = "Invalid user ID: " + e.getMessage();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid user ID: " + e.getMessage());
         } catch (Exception e) {
-            // Handle unexpected errors
-            String errorMessage = "An error occurred while fetching notifications: " + e.getMessage();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while fetching notifications: " + e.getMessage());
         }
     }
 }

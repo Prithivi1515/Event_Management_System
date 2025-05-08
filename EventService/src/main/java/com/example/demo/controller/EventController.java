@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,8 +25,12 @@ public class EventController {
 
     @PostMapping("/create")
     public ResponseEntity<String> createEvent(@RequestBody Event event) {
-        service.createEvent(event);
-        return ResponseEntity.ok("Event Created");
+        String result = service.createEvent(event);
+        if ("Event created successfully.".equals(result)) {
+            return ResponseEntity.ok(result);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+        }
     }
 
     @GetMapping("/getEventById/{eid}")
@@ -46,13 +51,13 @@ public class EventController {
         return ResponseEntity.ok("Event Deleted");
     }
 
-    @GetMapping("/filterByCategory/{category}") // Changed to @GetMapping
+    @GetMapping("/filterByCategory/{category}")
     public ResponseEntity<List<Event>> filterByCategory(@PathVariable("category") String category) {
         List<Event> events = service.filterByCategory(category);
         return ResponseEntity.ok(events);
     }
 
-    @GetMapping("/filterByLocation/{location}") // Changed to @GetMapping
+    @GetMapping("/filterByLocation/{location}")
     public ResponseEntity<List<Event>> filterByLocation(@PathVariable("location") String location) {
         List<Event> events = service.filterByLocation(location);
         return ResponseEntity.ok(events);

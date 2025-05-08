@@ -7,6 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,13 +20,31 @@ import lombok.NoArgsConstructor;
 @Entity
 @Builder
 public class Notification {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "notification_id", nullable = false)
     private int notificationId;
+
+    @NotNull(message = "User ID cannot be null")
     private int userId;
+
+    @NotNull(message = "Event ID cannot be null")
     private int eventId;
+
+    @NotBlank(message = "Message cannot be blank")
     private String message;
-    @Builder.Default // Ensures default value is set when using the builder
-    private LocalDateTime timestamp = LocalDateTime.now();
+
+    @NotNull(message = "Timestamp cannot be null")
+    private LocalDateTime timestamp;
+
+    // Ensure timestamp is set to the current time if not provided
+    public static class NotificationBuilder {
+        private LocalDateTime timestamp = LocalDateTime.now();
+
+        public NotificationBuilder timestamp(LocalDateTime timestamp) {
+            this.timestamp = timestamp != null ? timestamp : LocalDateTime.now();
+            return this;
+        }
+    }
 }
