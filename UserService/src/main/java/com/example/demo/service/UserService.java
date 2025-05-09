@@ -7,13 +7,19 @@ import com.example.demo.model.User;
 
 public interface UserService {
     
-    public abstract String saveUser(User user);
+    String saveUser(User user);
     
-    public abstract User getUser(int userId) throws UserNotFoundException;
+    User getUser(int userId) throws UserNotFoundException;
     
-    public abstract List<User> getAllUsers();
+    List<User> getAllUsers() throws UserNotFoundException;
     
-    public abstract String deleteUser(int userId) throws UserNotFoundException;
+    String deleteUser(int userId) throws UserNotFoundException;
 
-    public abstract String updateUser(int userId, User user) throws UserNotFoundException; // Kept only this method
+    String updateUser(int userId, User user) throws UserNotFoundException;
+    
+    User getUserByEmail(String email) throws UserNotFoundException;
+    
+    List<User> getUsersByRole(String role) throws UserNotFoundException;
+    
+    List<User> searchUsersByName(String name) throws UserNotFoundException;
 }

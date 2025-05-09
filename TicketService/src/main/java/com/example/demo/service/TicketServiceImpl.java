@@ -5,13 +5,17 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.dto.Event;
 import com.example.demo.dto.NotificationRequest;
+import com.example.demo.dto.User;
 import com.example.demo.exception.EventNotFoundException;
 import com.example.demo.exception.TicketNotFoundException;
+import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.feignclient.EventClient;
 import com.example.demo.feignclient.NotificationClient;
+import com.example.demo.feignclient.UserClient;
 import com.example.demo.model.Ticket;
 import com.example.demo.model.Ticket.Status;
 import com.example.demo.repository.TicketRepository;
@@ -24,12 +28,30 @@ public class TicketServiceImpl implements TicketService {
 
     @Autowired
     private EventClient eventClient;
+    
+    @Autowired
+    private UserClient userClient;
 
     @Autowired
     private NotificationClient notificationClient;
 
     @Override
-    public Ticket bookTicket(Ticket ticket) {
+    @Transactional
+    public Ticket bookTicket(Ticket ticket) throws UserNotFoundException, EventNotFoundException {
+        if (ticket.getUserId() <= 0) {
+            throw new IllegalArgumentException("User ID must be greater than 0");
+        }
+        
+        if (ticket.getEventId() <= 0) {
+            throw new IllegalArgumentException("Event ID must be greater than 0");
+        }
+        
+        // Check if the user exists
+        User user = userClient.getUserById(ticket.getUserId());
+        if (user == null) {
+            throw new UserNotFoundException("User not found with ID: " + ticket.getUserId());
+        }
+        
         // Check if the event exists
         Event event = eventClient.getEventById(ticket.getEventId());
         if (event == null) {
@@ -58,31 +80,67 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public Ticket getTicketById(int ticketId) {
+    public Ticket getTicketById(int ticketId) throws TicketNotFoundException {
+        if (ticketId <= 0) {
+            throw new IllegalArgumentException("Ticket ID must be greater than 0");
+        }
+        
         return repository.findById(ticketId)
                 .orElseThrow(() -> new TicketNotFoundException("Ticket not found with ID: " + ticketId));
     }
 
     @Override
-    public List<Ticket> getTicketsByUserId(int userId) {
+    public List<Ticket> getAllTickets() {
+        List<Ticket> tickets = repository.findAll();
+        if (tickets.isEmpty()) {
+            throw new TicketNotFoundException("No tickets found in the system.");
+        }
+        return tickets;
+    }
+
+    @Override
+    public List<Ticket> getTicketsByUserId(int userId) throws UserNotFoundException {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("User ID must be greater than 0");
+        }
+        
+        // Verify user exists
+        User user = userClient.getUserById(userId);
+        if (user == null) {
+            throw new UserNotFoundException("User not found with ID: " + userId);
+        }
+        
         List<Ticket> tickets = repository.findByUserId(userId);
         if (tickets.isEmpty()) {
-            throw new TicketNotFoundException("No tickets found for user ID: " + userId);
+            // Just return empty list instead of throwing exception
+            return tickets;
         }
         return tickets;
     }
 
     @Override
-    public List<Ticket> getTicketsByEventId(int eventId) {
+    public List<Ticket> getTicketsByEventId(int eventId) throws EventNotFoundException {
+        if (eventId <= 0) {
+            throw new IllegalArgumentException("Event ID must be greater than 0");
+        }
+        
+        // Verify event exists
+        Event event = eventClient.getEventById(eventId);
+        if (event == null) {
+            throw new EventNotFoundException("Event not found with ID: " + eventId);
+        }
+        
         List<Ticket> tickets = repository.findByEventId(eventId);
         if (tickets.isEmpty()) {
-            throw new TicketNotFoundException("No tickets found for event ID: " + eventId);
+            // Just return empty list instead of throwing exception
+            return tickets;
         }
         return tickets;
     }
 
     @Override
-    public void cancelTicket(int ticketId) {
+    @Transactional
+    public Ticket cancelTicket(int ticketId) throws TicketNotFoundException {
         Ticket ticket = getTicketById(ticketId);
 
         // Check if the ticket is already canceled
@@ -102,14 +160,67 @@ public class TicketServiceImpl implements TicketService {
             "Your ticket has been successfully canceled"
         );
         notificationClient.sendNotification(notificationRequest);
+        
+        return ticket; // Return the updated ticket
     }
-
+    
     @Override
-    public List<Ticket> getAllTickets() {
-        List<Ticket> tickets = repository.findAll();
-        if (tickets.isEmpty()) {
-            throw new TicketNotFoundException("No tickets found in the system.");
+    public List<Ticket> getTicketsByStatus(Status status) {
+        if (status == null) {
+            throw new IllegalArgumentException("Status cannot be null");
         }
-        return tickets;
+        
+        return repository.findByStatus(status);
+    }
+    
+    @Override
+    public List<Ticket> getTicketsByUserIdAndStatus(int userId, Status status) throws UserNotFoundException {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("User ID must be greater than 0");
+        }
+        
+        if (status == null) {
+            throw new IllegalArgumentException("Status cannot be null");
+        }
+        
+        // Verify user exists
+        User user = userClient.getUserById(userId);
+        if (user == null) {
+            throw new UserNotFoundException("User not found with ID: " + userId);
+        }
+        
+        return repository.findByUserIdAndStatus(userId, status);
+    }
+    
+    @Override
+    public List<Ticket> getTicketsByEventIdAndStatus(int eventId, Status status) throws EventNotFoundException {
+        if (eventId <= 0) {
+            throw new IllegalArgumentException("Event ID must be greater than 0");
+        }
+        
+        if (status == null) {
+            throw new IllegalArgumentException("Status cannot be null");
+        }
+        
+        // Verify event exists
+        Event event = eventClient.getEventById(eventId);
+        if (event == null) {
+            throw new EventNotFoundException("Event not found with ID: " + eventId);
+        }
+        
+        return repository.findByEventIdAndStatus(eventId, status);
+    }
+    
+    @Override
+    public boolean hasUserBookedEvent(int userId, int eventId) {
+        if (userId <= 0) {
+            throw new IllegalArgumentException("User ID must be greater than 0");
+        }
+        
+        if (eventId <= 0) {
+            throw new IllegalArgumentException("Event ID must be greater than 0");
+        }
+        
+        return repository.existsByUserIdAndEventId(userId, eventId);
     }
 }

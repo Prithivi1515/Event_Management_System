@@ -2,23 +2,30 @@ package com.example.demo.service;
 
 import java.util.List;
 
+import com.example.demo.exception.EventNotFoundException;
 import com.example.demo.model.Event;
 
 public interface EventService {
 
-    public abstract String createEvent(Event event);
+    String createEvent(Event event);
 
-    public abstract Event getEventById(int eid);
+    Event getEventById(int eventId) throws EventNotFoundException;
 
-    public abstract List<Event> getAllEvents();
+    List<Event> getAllEvents() throws EventNotFoundException;
 
-    public abstract String deleteEvent(int eid);
+    String updateEvent(int eventId, Event event) throws EventNotFoundException;
 
-    public abstract List<Event> filterByCategory(String category);
+    String deleteEvent(int eventId) throws EventNotFoundException;
 
-    public abstract List<Event> filterByLocation(String location);
+    List<Event> filterByCategory(String category) throws EventNotFoundException;
 
-    public abstract void decreaseTicketCount(int eventId) throws IllegalArgumentException;
+    List<Event> filterByLocation(String location) throws EventNotFoundException;
+    
+    List<Event> searchEventsByName(String keyword) throws EventNotFoundException;
+    
+    List<Event> getEventsByOrganizer(int organizerId) throws EventNotFoundException;
 
-    public abstract void increaseTicketCount(int eventId) throws IllegalArgumentException;
+    void decreaseTicketCount(int eventId) throws EventNotFoundException, IllegalArgumentException;
+
+    void increaseTicketCount(int eventId) throws EventNotFoundException, IllegalArgumentException;
 }

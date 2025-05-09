@@ -5,15 +5,16 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(name = "users") // Added table name to avoid collision with SQL reserved keyword "user"
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -34,12 +35,15 @@ public class User {
 
     @NotBlank(message = "Password cannot be blank")
     @Column(nullable = false)
-    private String password;
+    private String password; // This should be hashed before storing
 
     @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Contact number must be valid")
+    @Column(nullable = true) // Made explicitly nullable since it's not marked with @NotBlank
     private String contactNumber;
 
     @NotBlank(message = "Roles cannot be blank")
+    @Pattern(regexp = "^(user|organizer|admin)$", message = "Role must be either 'user', 'organizer', or 'admin'")
+    @Column(nullable = false)
     private String roles;
 }
 

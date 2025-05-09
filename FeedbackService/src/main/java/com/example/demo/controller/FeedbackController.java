@@ -10,11 +10,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.demo.exception.EventNotFoundException;
-import com.example.demo.exception.FeedbackNotFoundException;
-import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.model.Feedback;
 import com.example.demo.service.FeedbackService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/feedback")
@@ -24,61 +23,39 @@ public class FeedbackController {
     FeedbackService service;
 
     @PostMapping("/save")
-    public String saveFeedback(@RequestBody Feedback feedback) {
+    public Feedback saveFeedback(@RequestBody Feedback feedback) {
         return service.saveFeedback(feedback);
     }
 
     @PutMapping("/update/{fid}")
-    public String updateFeedback(@PathVariable("fid") int feedbackId, @RequestBody Feedback feedback) {
-        String result = service.updateFeedback(feedbackId, feedback);
-        if (result == null) {
-            throw new FeedbackNotFoundException("Feedback not found with ID: " + feedbackId);
-        }
-        return result;
+    public Feedback updateFeedback(@PathVariable("fid") int feedbackId, @RequestBody Feedback feedback) {
+        return service.updateFeedback(feedbackId, feedback);
     }
 
     @DeleteMapping("/delete/{fid}")
     public String deleteFeedback(@PathVariable("fid") int feedbackId) {
-        String result = service.deleteFeedback(feedbackId);
-        if (result == null) {
-            throw new FeedbackNotFoundException("Feedback not found with ID: " + feedbackId);
-        }
-        return result;
+        service.deleteFeedback(feedbackId);
+        return "Feedback deleted successfully!";
     }
 
     @GetMapping("/get/{fid}")
-    public String getFeedbackById(@PathVariable("fid") int feedbackId) {
-        String result = service.getFeedbackById(feedbackId);
-        if (result == null) {
-            throw new FeedbackNotFoundException("Feedback not found with ID: " + feedbackId);
-        }
-        return result;
+    public Feedback getFeedbackById(@PathVariable("fid") int feedbackId) {
+        return service.getFeedbackById(feedbackId);
     }
 
     @GetMapping("/getAllFeedbacksByUser/{uid}")
-    public String getAllFeedbacksByUser(@PathVariable("uid") int userId) {
-        String result = service.getAllFeedbacksByUser(userId);
-        if (result == null || result.isEmpty()) {
-            throw new UserNotFoundException("No feedback found for user with ID: " + userId);
-        }
-        return result;
+    public List<Feedback> getAllFeedbacksByUser(@PathVariable("uid") int userId) {
+        return service.getAllFeedbacksByUser(userId);
     }
 
     @GetMapping("/getAllFeedbacksByEvent/{eid}")
-    public String getAllFeedbacksByEvent(@PathVariable("eid") int eventId) {
-        String result = service.getAllFeedbacksByEvent(eventId);
-        if (result == null || result.isEmpty()) {
-            throw new EventNotFoundException("No feedback found for event with ID: " + eventId);
-        }
-        return result;
+    public List<Feedback> getAllFeedbacksByEvent(@PathVariable("eid") int eventId) {
+        return service.getAllFeedbacksByEvent(eventId);
     }
 
     @GetMapping("/getAverageRatingByEvent/{eid}")
     public String getAverageRatingByEvent(@PathVariable("eid") int eventId) {
         float averageRating = service.getAverageRatingByEvent(eventId);
-        if (averageRating == 0) {
-            throw new EventNotFoundException("No feedback available for the event with ID: " + eventId);
-        }
         return "The average rating for the event with ID " + eventId + " is: " + averageRating;
     }
 }

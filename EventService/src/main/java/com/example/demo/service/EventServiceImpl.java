@@ -16,10 +16,10 @@ import com.example.demo.repository.EventRepository;
 public class EventServiceImpl implements EventService {
 
     @Autowired
-    EventRepository repository;
+    private EventRepository repository;
 
     @Autowired
-    UserClient userClient;
+    private UserClient userClient;
 
     @Override
     @Transactional
@@ -31,12 +31,12 @@ public class EventServiceImpl implements EventService {
         try {
             user = userClient.getUserById(organizerId);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to fetch user details for organizer ID: " + organizerId, e);
+            throw new IllegalArgumentException("Failed to fetch user details for organizer ID: " + organizerId, e);
         }
 
         // Validate user roles
         if (user == null || user.getRoles() == null || !user.getRoles().equalsIgnoreCase("organizer")) {
-            throw new RuntimeException("User is not an organizer or does not exist.");
+            throw new IllegalArgumentException("User is not an organizer or does not exist.");
         }
 
         // Save the event
@@ -45,13 +45,13 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Event getEventById(int eid) {
-        return repository.findById(eid)
-                .orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eid));
+    public Event getEventById(int eventId) throws EventNotFoundException {
+        return repository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eventId));
     }
 
     @Override
-    public List<Event> getAllEvents() {
+    public List<Event> getAllEvents() throws EventNotFoundException {
         List<Event> events = repository.findAll();
         if (events.isEmpty()) {
             throw new EventNotFoundException("No events found in the system.");
@@ -60,16 +60,30 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public String deleteEvent(int eid) {
-        Event event = repository.findById(eid)
-                .orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eid));
+    @Transactional
+    public String updateEvent(int eventId, Event event) throws EventNotFoundException {
+        if (!repository.existsById(eventId)) {
+            throw new EventNotFoundException("Cannot update: Event not found with ID: " + eventId);
+        }
+        
+        event.setEventId(eventId); // Ensure the ID matches
+        repository.save(event);
+        return "Event updated successfully.";
+    }
+
+    @Override
+    @Transactional
+    public String deleteEvent(int eventId) throws EventNotFoundException {
+        Event event = repository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eventId));
         repository.delete(event);
         return "Event deleted successfully.";
     }
 
     @Override
-    public List<Event> filterByCategory(String category) {
-        List<Event> events = repository.findByCategory(category);
+    public List<Event> filterByCategory(String category) throws EventNotFoundException {
+        // Fixed method call to match repository interface
+        List<Event> events = repository.findByCategoryIgnoreCase(category);
         if (events.isEmpty()) {
             throw new EventNotFoundException("No events found for category: " + category);
         }
@@ -77,16 +91,36 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<Event> filterByLocation(String location) {
-        List<Event> events = repository.findByLocation(location);
+    public List<Event> filterByLocation(String location) throws EventNotFoundException {
+        // Fixed method call to match repository interface
+        List<Event> events = repository.findByLocationIgnoreCase(location);
         if (events.isEmpty()) {
             throw new EventNotFoundException("No events found for location: " + location);
         }
         return events;
     }
+    
+    @Override
+    public List<Event> searchEventsByName(String keyword) throws EventNotFoundException {
+        List<Event> events = repository.findByNameContainingIgnoreCase(keyword);
+        if (events.isEmpty()) {
+            throw new EventNotFoundException("No events found matching keyword: " + keyword);
+        }
+        return events;
+    }
+    
+    @Override
+    public List<Event> getEventsByOrganizer(int organizerId) throws EventNotFoundException {
+        List<Event> events = repository.findByOrganizerId(organizerId);
+        if (events.isEmpty()) {
+            throw new EventNotFoundException("No events found for organizer ID: " + organizerId);
+        }
+        return events;
+    }
 
     @Override
-    public void decreaseTicketCount(int eventId) {
+    @Transactional
+    public void decreaseTicketCount(int eventId) throws EventNotFoundException, IllegalArgumentException {
         Event event = repository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eventId));
         int currentCount = event.getTicketCount();
@@ -94,12 +128,13 @@ public class EventServiceImpl implements EventService {
             event.setTicketCount(currentCount - 1);
             repository.save(event);
         } else {
-            throw new RuntimeException("No tickets available for event with ID: " + eventId);
+            throw new IllegalArgumentException("No tickets available for event with ID: " + eventId);
         }
     }
 
     @Override
-    public void increaseTicketCount(int eventId) {
+    @Transactional
+    public void increaseTicketCount(int eventId) throws EventNotFoundException {
         Event event = repository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eventId));
         int currentCount = event.getTicketCount();

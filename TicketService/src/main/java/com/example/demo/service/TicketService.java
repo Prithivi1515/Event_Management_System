@@ -2,19 +2,31 @@ package com.example.demo.service;
 
 import java.util.List;
 
+import com.example.demo.exception.EventNotFoundException;
+import com.example.demo.exception.TicketNotFoundException;
+import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.model.Ticket;
+import com.example.demo.model.Ticket.Status;
 
 public interface TicketService {
 
-    public abstract Ticket bookTicket(Ticket ticket);
+    Ticket bookTicket(Ticket ticket) throws UserNotFoundException, EventNotFoundException;
 
-    public abstract Ticket getTicketById(int ticketId);
+    Ticket getTicketById(int ticketId) throws TicketNotFoundException;
 
-    public abstract List<Ticket> getAllTickets();
+    List<Ticket> getAllTickets();
 
-    public abstract List<Ticket> getTicketsByUserId(int userId);
+    List<Ticket> getTicketsByUserId(int userId) throws UserNotFoundException;
 
-    public abstract List<Ticket> getTicketsByEventId(int eventId);
+    List<Ticket> getTicketsByEventId(int eventId) throws EventNotFoundException;
 
-    public abstract void cancelTicket(int ticketId); 
+    Ticket cancelTicket(int ticketId) throws TicketNotFoundException;
+    
+    List<Ticket> getTicketsByStatus(Status status);
+    
+    List<Ticket> getTicketsByUserIdAndStatus(int userId, Status status) throws UserNotFoundException;
+    
+    List<Ticket> getTicketsByEventIdAndStatus(int eventId, Status status) throws EventNotFoundException;
+    
+    boolean hasUserBookedEvent(int userId, int eventId);
 }

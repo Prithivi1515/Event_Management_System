@@ -66,11 +66,47 @@ public class NotificationServiceImpl implements NotificationService {
             throw new IllegalArgumentException("Invalid user ID: " + userId);
         }
 
+        // Verify user exists
+        User user = userClient.getUserById(userId);
+        if (user == null) {
+            throw new UserNotFoundException("User not found with ID: " + userId);
+        }
+
         List<Notification> notifications = notificationRepository.findByUserId(userId);
         if (notifications.isEmpty()) {
             throw new NotificationNotFoundException("No notifications found for user ID: " + userId);
         }
 
         return notifications;
+    }
+
+    @Override
+    public List<Notification> getAllNotificationsByEventId(int eventId) throws NotificationNotFoundException, EventNotFoundException {
+        if (eventId <= 0) {
+            throw new IllegalArgumentException("Invalid event ID: " + eventId);
+        }
+
+        // Verify event exists
+        Event event = eventClient.getEventById(eventId);
+        if (event == null) {
+            throw new EventNotFoundException("Event not found with ID: " + eventId);
+        }
+
+        List<Notification> notifications = notificationRepository.findByEventId(eventId);
+        if (notifications.isEmpty()) {
+            throw new NotificationNotFoundException("No notifications found for event ID: " + eventId);
+        }
+
+        return notifications;
+    }
+
+    @Override
+    public Notification getNotificationById(int id) throws NotificationNotFoundException {
+        if (id <= 0) {
+            throw new IllegalArgumentException("Invalid notification ID: " + id);
+        }
+
+        return notificationRepository.findById(id)
+                .orElseThrow(() -> new NotificationNotFoundException("Notification not found with ID: " + id));
     }
 }

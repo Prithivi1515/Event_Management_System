@@ -36,15 +36,6 @@ public class Notification {
     private String message;
 
     @NotNull(message = "Timestamp cannot be null")
-    private LocalDateTime timestamp;
-
-    // Ensure timestamp is set to the current time if not provided
-    public static class NotificationBuilder {
-        private LocalDateTime timestamp = LocalDateTime.now();
-
-        public NotificationBuilder timestamp(LocalDateTime timestamp) {
-            this.timestamp = timestamp != null ? timestamp : LocalDateTime.now();
-            return this;
-        }
-    }
+    @Builder.Default
+    private LocalDateTime timestamp = LocalDateTime.now();
 }

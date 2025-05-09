@@ -17,8 +17,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String saveUser(User user) {
-        // Check for duplicate email
-        if (repository.findByEmail(user.getEmail()).isPresent()) {
+        // Check for duplicate email using the correct method name
+        if (repository.existsByEmailIgnoreCase(user.getEmail())) {
             throw new IllegalArgumentException("Email already exists: " + user.getEmail());
         }
         repository.save(user);
@@ -30,14 +30,20 @@ public class UserServiceImpl implements UserService {
         User existingUser = repository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-        repository.findByEmail(user.getEmail()).ifPresent(existing -> {
+        // Check for email uniqueness with the correct method
+        repository.findByEmailIgnoreCase(user.getEmail()).ifPresent(existing -> {
             if (existing.getUserId() != userId) {
                 throw new IllegalArgumentException("Email already exists: " + user.getEmail());
             }
         });
 
+        // Update all fields, not just name and email
         existingUser.setName(user.getName());
         existingUser.setEmail(user.getEmail());
+        existingUser.setPassword(user.getPassword()); // Consider password hashing
+        existingUser.setContactNumber(user.getContactNumber());
+        existingUser.setRoles(user.getRoles());
+        
         repository.save(existingUser);
         return "User updated successfully!";
     }
@@ -49,8 +55,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getAllUsers() {
-        return repository.findAll();
+    public List<User> getAllUsers() throws UserNotFoundException {
+        List<User> users = repository.findAll();
+        if (users.isEmpty()) {
+            throw new UserNotFoundException("No users found in the system.");
+        }
+        return users;
     }
 
     @Override
@@ -59,5 +69,29 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UserNotFoundException("Cannot delete, user not found with ID: " + userId));
         repository.delete(user);
         return "User deleted successfully!";
+    }
+    
+    @Override
+    public User getUserByEmail(String email) throws UserNotFoundException {
+        return repository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+    }
+    
+    @Override
+    public List<User> getUsersByRole(String role) throws UserNotFoundException {
+        List<User> users = repository.findByRoles(role);
+        if (users.isEmpty()) {
+            throw new UserNotFoundException("No users found with role: " + role);
+        }
+        return users;
+    }
+    
+    @Override
+    public List<User> searchUsersByName(String name) throws UserNotFoundException {
+        List<User> users = repository.findByNameContainingIgnoreCase(name);
+        if (users.isEmpty()) {
+            throw new UserNotFoundException("No users found matching name: " + name);
+        }
+        return users;
     }
 }

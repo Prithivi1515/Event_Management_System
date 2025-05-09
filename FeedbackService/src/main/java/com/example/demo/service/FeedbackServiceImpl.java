@@ -29,7 +29,7 @@ public class FeedbackServiceImpl implements FeedbackService {
     private UserClient userClient;
 
     @Override
-    public String saveFeedback(Feedback feedback) {
+    public Feedback saveFeedback(Feedback feedback) {
         // Validate user
         User user = userClient.getUserById(feedback.getUserId());
         if (user == null) {
@@ -50,18 +50,18 @@ public class FeedbackServiceImpl implements FeedbackService {
         // Save feedback
         feedback.setTimestamp(LocalDateTime.now());
         feedbackRepository.save(feedback);
-        return "Feedback saved successfully!";
+        return feedback;
     }
 
     @Override
-    public String updateFeedback(int feedbackId, Feedback feedback) {
+    public Feedback updateFeedback(int feedbackId, Feedback feedback) {
         Feedback existingFeedback = feedbackRepository.findById(feedbackId)
                 .orElseThrow(() -> new FeedbackNotFoundException("Feedback not found with ID: " + feedbackId));
 
         existingFeedback.setComments(feedback.getComments());
         existingFeedback.setRating(feedback.getRating());
         feedbackRepository.save(existingFeedback);
-        return "Feedback updated successfully!";
+        return existingFeedback;
     }
 
     @Override
@@ -73,28 +73,28 @@ public class FeedbackServiceImpl implements FeedbackService {
     }
 
     @Override
-    public String getFeedbackById(int feedbackId) {
+    public Feedback getFeedbackById(int feedbackId) {
         Feedback feedback = feedbackRepository.findById(feedbackId)
                 .orElseThrow(() -> new FeedbackNotFoundException("Feedback not found with ID: " + feedbackId));
-        return feedback.toString();
+        return feedback;
     }
 
     @Override
-    public String getAllFeedbacksByUser(int userId) {
+    public List<Feedback> getAllFeedbacksByUser(int userId) {
         List<Feedback> feedbacks = feedbackRepository.findByUserId(userId);
         if (feedbacks.isEmpty()) {
             throw new UserNotFoundException("No feedback found for user with ID: " + userId);
         }
-        return feedbacks.toString();
+        return feedbacks;
     }
 
     @Override
-    public String getAllFeedbacksByEvent(int eventId) {
+    public List<Feedback> getAllFeedbacksByEvent(int eventId) {
         List<Feedback> feedbacks = feedbackRepository.findByEventId(eventId);
         if (feedbacks.isEmpty()) {
             throw new EventNotFoundException("No feedback found for event with ID: " + eventId);
         }
-        return feedbacks.toString();
+        return feedbacks;
     }
 
     @Override
