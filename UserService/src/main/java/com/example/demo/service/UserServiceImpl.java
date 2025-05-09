@@ -30,7 +30,6 @@ public class UserServiceImpl implements UserService {
         User existingUser = repository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
 
-        // Check for duplicate email (excluding the current user)
         repository.findByEmail(user.getEmail()).ifPresent(existing -> {
             if (existing.getUserId() != userId) {
                 throw new IllegalArgumentException("Email already exists: " + user.getEmail());

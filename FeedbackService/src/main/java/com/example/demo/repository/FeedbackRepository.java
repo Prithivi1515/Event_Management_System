@@ -19,4 +19,6 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Integer> {
     // Calculate the average rating for a given eventId
     @Query("SELECT COALESCE(AVG(f.rating), 0) FROM Feedback f WHERE f.eventId = :eventId")
     double findAverageRatingByEventId(@Param("eventId") int eventId);
+
+    boolean existsByUserIdAndEventId(int userId, int eventId);
 }

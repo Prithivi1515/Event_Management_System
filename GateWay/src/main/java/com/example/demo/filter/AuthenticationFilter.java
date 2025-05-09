@@ -83,7 +83,8 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         else if ("USER".equalsIgnoreCase(role)) {
             return path.startsWith("/user/update") || path.startsWith("/event/getAllEvents")
             || path.startsWith("/event/getEventById") || path.startsWith("/ticket/book")
-            || path.startsWith("/ticket/getTicketById") || path.startsWith("/event/filterByCategory")
+            || path.startsWith("/ticket/getTicketById") || path.startsWith("/ticket/getTicketByUserId") 
+            ||path.startsWith("/event/filterByCategory")
             || path.startsWith("/event/filterByLocation") 
             || path.startsWith("/event/getTicketByUserId") || path.startsWith("/ticket/cancel") 
             || path.startsWith("/feedback/save") || path.startsWith("/feedback/update")

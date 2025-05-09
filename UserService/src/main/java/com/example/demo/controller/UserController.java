@@ -3,8 +3,6 @@ package com.example.demo.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,52 +26,40 @@ public class UserController {
     private UserService service;
 
     @PostMapping("/save")
-    public ResponseEntity<String> saveUser(@RequestBody @Valid User user) {
-        String response = service.saveUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    public String saveUser(@RequestBody @Valid User user) {
+        return service.saveUser(user);
     }
 
     @PutMapping("/update/{uid}")
-    public ResponseEntity<String> updateUser(@PathVariable("uid") int userId, @RequestBody @Valid User user) {
+    public String updateUser(@PathVariable("uid") int userId, @RequestBody @Valid User user) {
         if (userId <= 0) {
             throw new IllegalArgumentException("User ID must be greater than 0.");
         }
-        String response = service.updateUser(userId, user);
-        return ResponseEntity.ok(response);
+        return service.updateUser(userId, user);
     }
 
     @GetMapping("/getUserById/{uid}")
-    public ResponseEntity<?> getUser(@PathVariable("uid") int userId) {
+    public User getUser(@PathVariable("uid") int userId) {
         if (userId <= 0) {
             throw new IllegalArgumentException("User ID must be greater than 0.");
         }
-        try {
-            User user = service.getUser(userId);
-            return ResponseEntity.ok(user);
-        } catch (UserNotFoundException e) {
-            throw new UserNotFoundException("User not found with ID: " + userId);
-        }
+        return service.getUser(userId);
     }
 
     @GetMapping("/getAllUsers")
-    public ResponseEntity<List<User>> getAllUsers() {
+    public List<User> getAllUsers() {
         List<User> users = service.getAllUsers();
         if (users.isEmpty()) {
             throw new UserNotFoundException("No users found in the system.");
         }
-        return ResponseEntity.ok(users);
+        return users;
     }
 
     @DeleteMapping("/deleteUserById/{uid}")
-    public ResponseEntity<String> deleteUser(@PathVariable("uid") int userId) {
+    public String deleteUser(@PathVariable("uid") int userId) {
         if (userId <= 0) {
             throw new IllegalArgumentException("User ID must be greater than 0.");
         }
-        try {
-            String response = service.deleteUser(userId);
-            return ResponseEntity.ok(response);
-        } catch (UserNotFoundException e) {
-            throw new UserNotFoundException("User not found with ID: " + userId);
-        }
+        return service.deleteUser(userId);
     }
 }
