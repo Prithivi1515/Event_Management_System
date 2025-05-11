@@ -14,7 +14,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "users") // Added table name to avoid collision with SQL reserved keyword "user"
+@Table
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

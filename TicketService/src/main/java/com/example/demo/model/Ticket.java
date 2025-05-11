@@ -33,10 +33,10 @@ public class Ticket {
     @Min(value = 1, message = "User ID must be greater than 0")
     private int userId;
 
-    @NotNull(message = "Booking date cannot be null")
+  //  @NotNull(message = "Booking date cannot be null")
     private LocalDateTime bookingDate;
 
-    @NotNull(message = "Status cannot be null")
+//    @NotNull(message = "Status cannot be null")
     @Enumerated(EnumType.STRING)
     private Status status;
 
