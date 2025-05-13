@@ -45,9 +45,9 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 try {
                     String role = util.extractRolesFromToken(token);
                     String requestedPath = exchange.getRequest().getPath().toString();
-                    String method = exchange.getRequest().getMethod().name();
+//                    String method = exchange.getRequest().getMethod().name();
 
-                    if (!isAuthorized(role, requestedPath, method)) {
+                    if (!isAuthorized(role, requestedPath)) {
                         return handleUnauthorized(exchange.getResponse(), "Unauthorized access", HttpStatus.FORBIDDEN);
                     }
 
@@ -64,7 +64,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     // ORGANIZER can access update user, create event, update event, delete event,get feedback by event, get average rating by event, get all tickets by event id, get all feedbacks by event id, get all tickets by user id
     // USER can access update user, get all events, get event by id, get all tickets, get ticket by id, get all feedbacks, get feedback by id, get all notifications, get notification by id
 
-    private boolean isAuthorized(String role, String path, String method) {
+    private boolean isAuthorized(String role, String path) {
         if ("ADMIN".equalsIgnoreCase(role)) {
             return path.startsWith("/user") || path.startsWith("/event")
             || path.startsWith("/ticket") || path.startsWith("/feedback") 
