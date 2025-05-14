@@ -37,7 +37,7 @@ public class User {
     @Column(nullable = false)
     private String password; // This should be hashed before storing
 
-    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Contact number must be valid")
+    @Pattern(regexp = "^\\+?\\d{10,15}$", message = "Contact number must be valid")
     @Column(nullable = true) // Made explicitly nullable since it's not marked with @NotBlank
     private String contactNumber;
 

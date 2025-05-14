@@ -31,7 +31,7 @@ import com.example.demo.service.UserServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class UserServiceApplicationTests {
+class UserServiceApplicationTests {
     
     private static final Logger logger = LoggerFactory.getLogger(UserServiceApplicationTests.class);
     
@@ -81,7 +81,7 @@ public class UserServiceApplicationTests {
 
     @Test
     @DisplayName("Save User - Success")
-    public void testSaveUser() {
+    void testSaveUser() {
         // Arrange
         when(repository.existsByEmailIgnoreCase(anyString())).thenReturn(false);
         when(repository.save(any(User.class))).thenReturn(testUser);
@@ -97,7 +97,7 @@ public class UserServiceApplicationTests {
     
     @Test
     @DisplayName("Save User - Email Already Exists")
-    public void testSaveUser_EmailExists() {
+    void testSaveUser_EmailExists() {
         // Arrange
         when(repository.existsByEmailIgnoreCase(anyString())).thenReturn(true);
         
@@ -113,7 +113,7 @@ public class UserServiceApplicationTests {
 
     @Test
     @DisplayName("Update User - Success")
-    public void testUpdateUser() {
+    void testUpdateUser() {
         // Arrange
         User existingUser = new User();
         existingUser.setUserId(1);
@@ -136,7 +136,7 @@ public class UserServiceApplicationTests {
     
     @Test
     @DisplayName("Update User - Not Found")
-    public void testUpdateUser_NotFound() {
+    void testUpdateUser_NotFound() {
         // Arrange
         when(repository.findById(anyInt())).thenReturn(Optional.empty());
         
@@ -152,7 +152,7 @@ public class UserServiceApplicationTests {
 
     @Test
     @DisplayName("Get User By ID - Success")
-    public void testGetUserById() {
+    void testGetUserById() {
         // Arrange
         when(repository.findById(anyInt())).thenReturn(Optional.of(testUser));
         
@@ -169,7 +169,7 @@ public class UserServiceApplicationTests {
     
     @Test
     @DisplayName("Get User By ID - Not Found")
-    public void testGetUserById_UserNotFound() {
+    void testGetUserById_UserNotFound() {
         // Arrange
         when(repository.findById(anyInt())).thenReturn(Optional.empty());
         
@@ -184,7 +184,7 @@ public class UserServiceApplicationTests {
 
     @Test
     @DisplayName("Get All Users - Success")
-    public void testGetAllUsers() {
+    void testGetAllUsers() {
         // Arrange
         List<User> users = Arrays.asList(testUser);
         when(repository.findAll()).thenReturn(users);
@@ -201,7 +201,7 @@ public class UserServiceApplicationTests {
     
     @Test
     @DisplayName("Get All Users - Empty")
-    public void testGetAllUsers_Empty() {
+    void testGetAllUsers_Empty() {
         // Arrange
         when(repository.findAll()).thenReturn(new ArrayList<>());
         
@@ -216,7 +216,7 @@ public class UserServiceApplicationTests {
 
     @Test
     @DisplayName("Delete User - Success")
-    public void testDeleteUserById() {
+    void testDeleteUserById() {
         // Arrange
         when(repository.findById(anyInt())).thenReturn(Optional.of(testUser));
         doNothing().when(repository).delete(any(User.class));
@@ -232,7 +232,7 @@ public class UserServiceApplicationTests {
     
     @Test
     @DisplayName("Delete User - Not Found")
-    public void testDeleteUserById_NotFound() {
+    void testDeleteUserById_NotFound() {
         // Arrange
         when(repository.findById(anyInt())).thenReturn(Optional.empty());
         
@@ -248,7 +248,7 @@ public class UserServiceApplicationTests {
 
     @Test
     @DisplayName("Get User By Email - Success")
-    public void testGetUserByEmail() {
+    void testGetUserByEmail() {
         // Arrange
         when(repository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.of(testUser));
         
@@ -264,7 +264,7 @@ public class UserServiceApplicationTests {
     
     @Test
     @DisplayName("Get User By Email - Not Found")
-    public void testGetUserByEmail_NotFound() {
+    void testGetUserByEmail_NotFound() {
         // Arrange
         when(repository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
         
@@ -279,7 +279,7 @@ public class UserServiceApplicationTests {
 
     @Test
     @DisplayName("Get Users By Role - Success")
-    public void testGetUsersByRole() {
+    void testGetUsersByRole() {
         // Arrange
         List<User> users = Arrays.asList(testUser);
         when(repository.findByRoles(anyString())).thenReturn(users);
@@ -296,7 +296,7 @@ public class UserServiceApplicationTests {
     
     @Test
     @DisplayName("Get Users By Role - Empty")
-    public void testGetUsersByRole_Empty() {
+    void testGetUsersByRole_Empty() {
         // Arrange
         when(repository.findByRoles(anyString())).thenReturn(new ArrayList<>());
         
@@ -311,7 +311,7 @@ public class UserServiceApplicationTests {
 
     @Test
     @DisplayName("Search Users By Name - Success")
-    public void testSearchUsersByName() {
+    void testSearchUsersByName() {
         // Arrange
         List<User> users = Arrays.asList(testUser);
         when(repository.findByNameContainingIgnoreCase(anyString())).thenReturn(users);
@@ -328,7 +328,7 @@ public class UserServiceApplicationTests {
     
     @Test
     @DisplayName("Search Users By Name - Empty")
-    public void testSearchUsersByName_Empty() {
+    void testSearchUsersByName_Empty() {
         // Arrange
         when(repository.findByNameContainingIgnoreCase(anyString())).thenReturn(new ArrayList<>());
         

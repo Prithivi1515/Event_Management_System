@@ -45,7 +45,6 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 try {
                     String role = util.extractRolesFromToken(token);
                     String requestedPath = exchange.getRequest().getPath().toString();
-//                    String method = exchange.getRequest().getMethod().name();
 
                     if (!isAuthorized(role, requestedPath)) {
                         return handleUnauthorized(exchange.getResponse(), "Unauthorized access", HttpStatus.FORBIDDEN);

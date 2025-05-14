@@ -2,7 +2,6 @@ package com.example.demo.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -21,12 +20,13 @@ import com.example.demo.model.Notification;
 import com.example.demo.service.NotificationService;
 
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 
 @RestController
 @RequestMapping("/notification")
+@AllArgsConstructor
 public class NotificationController {
 
-    @Autowired
     private NotificationService service;
 
     @PostMapping("/sendNotification")

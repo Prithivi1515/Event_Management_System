@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.Event;
@@ -15,21 +14,22 @@ import com.example.demo.exception.NotificationNotFoundException;
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.model.Notification;
 import com.example.demo.repository.NotificationRepository;
+
+import lombok.AllArgsConstructor;
+
 import com.example.demo.feignclient.EventClient;
 import com.example.demo.feignclient.UserClient;
 
 @Service
+@AllArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
     private static final Logger logger = LoggerFactory.getLogger(NotificationServiceImpl.class);
 
-    @Autowired
     private NotificationRepository notificationRepository;
 
-    @Autowired
     private UserClient userClient;
 
-    @Autowired
     private EventClient eventClient;
 
     @Override

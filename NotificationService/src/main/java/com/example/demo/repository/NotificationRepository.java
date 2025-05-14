@@ -20,6 +20,4 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
     // Find notifications by eventId (optional additional method)
     List<Notification> findByEventId(int eventId);
     
-    // Alternative method using the Spring Data JPA naming convention (no custom query needed)
-    // boolean existsByUserIdAndEventIdAndMessageIgnoreCase(int userId, int eventId, String message);
 }

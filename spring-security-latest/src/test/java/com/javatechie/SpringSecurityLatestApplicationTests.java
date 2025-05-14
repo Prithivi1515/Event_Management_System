@@ -6,8 +6,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class SpringSecurityLatestApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+ 
+    @Test
+    void contextLoads() {
+        // Test is successful if application context loads without errors
+    }
 
 }

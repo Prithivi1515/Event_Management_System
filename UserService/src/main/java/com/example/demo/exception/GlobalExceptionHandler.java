@@ -14,47 +14,54 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // Constants for response keys
+    private static final String KEY_TIMESTAMP = "timestamp";
+    private static final String KEY_STATUS = "status";
+    private static final String KEY_ERROR = "error";
+    private static final String KEY_MESSAGE = "message";
+    private static final String KEY_PATH = "path";
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
         Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.BAD_REQUEST.value());
-        response.put("error", "Validation Error");
-        response.put("message", ex.getBindingResult().getAllErrors().get(0).getDefaultMessage());
-        response.put("path", request.getDescription(false).replace("uri=", ""));
+        response.put(KEY_TIMESTAMP, LocalDateTime.now());
+        response.put(KEY_STATUS, HttpStatus.BAD_REQUEST.value());
+        response.put(KEY_ERROR, "Validation Error");
+        response.put(KEY_MESSAGE, ex.getBindingResult().getAllErrors().get(0).getDefaultMessage());
+        response.put(KEY_PATH, request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(TicketNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleTicketNotFoundException(TicketNotFoundException ex, WebRequest request) {
         Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.NOT_FOUND.value());
-        response.put("error", "Ticket Not Found");
-        response.put("message", ex.getMessage());
-        response.put("path", request.getDescription(false).replace("uri=", ""));
+        response.put(KEY_TIMESTAMP, LocalDateTime.now());
+        response.put(KEY_STATUS, HttpStatus.NOT_FOUND.value());
+        response.put(KEY_ERROR, "Ticket Not Found");
+        response.put(KEY_MESSAGE, ex.getMessage());
+        response.put(KEY_PATH, request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(EventNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleEventNotFoundException(EventNotFoundException ex, WebRequest request) {
         Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.NOT_FOUND.value());
-        response.put("error", "Event Not Found");
-        response.put("message", ex.getMessage());
-        response.put("path", request.getDescription(false).replace("uri=", ""));
+        response.put(KEY_TIMESTAMP, LocalDateTime.now());
+        response.put(KEY_STATUS, HttpStatus.NOT_FOUND.value());
+        response.put(KEY_ERROR, "Event Not Found");
+        response.put(KEY_MESSAGE, ex.getMessage());
+        response.put(KEY_PATH, request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex, WebRequest request) {
         Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        response.put("error", "Internal Server Error");
-        response.put("message", ex.getMessage());
-        response.put("path", request.getDescription(false).replace("uri=", ""));
+        response.put(KEY_TIMESTAMP, LocalDateTime.now());
+        response.put(KEY_STATUS, HttpStatus.INTERNAL_SERVER_ERROR.value());
+        response.put(KEY_ERROR, "Internal Server Error");
+        response.put(KEY_MESSAGE, ex.getMessage());
+        response.put(KEY_PATH, request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

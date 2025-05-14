@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.Event;
@@ -18,19 +17,29 @@ import com.example.demo.feignclient.UserClient;
 import com.example.demo.model.Feedback;
 import com.example.demo.repository.FeedbackRepository;
 
+import lombok.AllArgsConstructor;
+
 @Service
+@AllArgsConstructor
 public class FeedbackServiceImpl implements FeedbackService {
 
     private static final Logger logger = LoggerFactory.getLogger(FeedbackServiceImpl.class);
+    
+    // Log message constants
+    private static final String LOG_INVALID_FEEDBACK_ID = "Invalid feedback ID: {}";
+    private static final String LOG_INVALID_USER_ID = "Invalid user ID: {}";
+    private static final String LOG_INVALID_EVENT_ID = "Invalid event ID: {}";
+    
+    // Error message constants
+    private static final String ERR_FEEDBACK_NOT_FOUND = "Feedback not found with ID: ";
+    private static final String ERR_FEEDBACK_ID_INVALID = "Feedback ID must be greater than 0";
+    private static final String ERR_USER_ID_INVALID = "User ID must be greater than 0";
+    private static final String ERR_EVENT_ID_INVALID = "Event ID must be greater than 0";
 
-    @Autowired
-    private FeedbackRepository feedbackRepository;
+    private final FeedbackRepository feedbackRepository;
+    private final EventClient eventClient;
+    private final UserClient userClient;
 
-    @Autowired
-    private EventClient eventClient;
-
-    @Autowired
-    private UserClient userClient;
 
     @Override
     public Feedback saveFeedback(Feedback feedback) {
@@ -40,7 +49,7 @@ public class FeedbackServiceImpl implements FeedbackService {
         if (feedback.getUserId() <= 0 || feedback.getEventId() <= 0) {
             logger.warn("Invalid feedback data: userId={}, eventId={}", 
                     feedback.getUserId(), feedback.getEventId());
-            throw new IllegalArgumentException("User ID and Event ID must be greater than 0");
+            throw new IllegalArgumentException(ERR_USER_ID_INVALID + " and " + ERR_EVENT_ID_INVALID);
         }
         
         // Validate user
@@ -84,15 +93,15 @@ public class FeedbackServiceImpl implements FeedbackService {
         logger.info("Attempting to update feedback with ID: {}", feedbackId);
         
         if (feedbackId <= 0) {
-            logger.warn("Invalid feedback ID: {}", feedbackId);
-            throw new IllegalArgumentException("Feedback ID must be greater than 0");
+            logger.warn(LOG_INVALID_FEEDBACK_ID, feedbackId);
+            throw new IllegalArgumentException(ERR_FEEDBACK_ID_INVALID);
         }
         
         logger.debug("Fetching existing feedback with ID: {}", feedbackId);
         Feedback existingFeedback = feedbackRepository.findById(feedbackId)
                 .orElseThrow(() -> {
                     logger.error("Feedback not found with ID: {}", feedbackId);
-                    return new FeedbackNotFoundException("Feedback not found with ID: " + feedbackId);
+                    return new FeedbackNotFoundException(ERR_FEEDBACK_NOT_FOUND + feedbackId);
                 });
         
         logger.debug("Updating feedback fields: comments and rating");
@@ -110,15 +119,15 @@ public class FeedbackServiceImpl implements FeedbackService {
         logger.info("Attempting to delete feedback with ID: {}", feedbackId);
         
         if (feedbackId <= 0) {
-            logger.warn("Invalid feedback ID: {}", feedbackId);
-            throw new IllegalArgumentException("Feedback ID must be greater than 0");
+            logger.warn(LOG_INVALID_FEEDBACK_ID, feedbackId);
+            throw new IllegalArgumentException(ERR_FEEDBACK_ID_INVALID);
         }
         
         logger.debug("Fetching feedback with ID: {} for deletion", feedbackId);
         Feedback feedback = feedbackRepository.findById(feedbackId)
                 .orElseThrow(() -> {
                     logger.error("Cannot delete - feedback not found with ID: {}", feedbackId);
-                    return new FeedbackNotFoundException("Feedback not found with ID: " + feedbackId);
+                    return new FeedbackNotFoundException(ERR_FEEDBACK_NOT_FOUND + feedbackId);
                 });
                 
         logger.debug("Deleting feedback from database, ID: {}", feedbackId);
@@ -132,15 +141,15 @@ public class FeedbackServiceImpl implements FeedbackService {
         logger.info("Retrieving feedback with ID: {}", feedbackId);
         
         if (feedbackId <= 0) {
-            logger.warn("Invalid feedback ID: {}", feedbackId);
-            throw new IllegalArgumentException("Feedback ID must be greater than 0");
+            logger.warn(LOG_INVALID_FEEDBACK_ID, feedbackId);
+            throw new IllegalArgumentException(ERR_FEEDBACK_ID_INVALID);
         }
         
         logger.debug("Fetching feedback from database with ID: {}", feedbackId);
         Feedback feedback = feedbackRepository.findById(feedbackId)
                 .orElseThrow(() -> {
                     logger.error("Feedback not found with ID: {}", feedbackId);
-                    return new FeedbackNotFoundException("Feedback not found with ID: " + feedbackId);
+                    return new FeedbackNotFoundException(ERR_FEEDBACK_NOT_FOUND + feedbackId);
                 });
                 
         logger.debug("Feedback retrieved successfully: ID={}, eventId={}, userId={}, rating={}",
@@ -153,8 +162,8 @@ public class FeedbackServiceImpl implements FeedbackService {
         logger.info("Retrieving all feedback for user ID: {}", userId);
         
         if (userId <= 0) {
-            logger.warn("Invalid user ID: {}", userId);
-            throw new IllegalArgumentException("User ID must be greater than 0");
+            logger.warn(LOG_INVALID_USER_ID, userId);
+            throw new IllegalArgumentException(ERR_USER_ID_INVALID);
         }
         
         logger.debug("Fetching feedback from database for user ID: {}", userId);
@@ -173,8 +182,8 @@ public class FeedbackServiceImpl implements FeedbackService {
         logger.info("Retrieving all feedback for event ID: {}", eventId);
         
         if (eventId <= 0) {
-            logger.warn("Invalid event ID: {}", eventId);
-            throw new IllegalArgumentException("Event ID must be greater than 0");
+            logger.warn(LOG_INVALID_EVENT_ID, eventId);
+            throw new IllegalArgumentException(ERR_EVENT_ID_INVALID);
         }
         
         logger.debug("Fetching feedback from database for event ID: {}", eventId);
@@ -193,8 +202,8 @@ public class FeedbackServiceImpl implements FeedbackService {
         logger.info("Calculating average rating for event ID: {}", eventId);
         
         if (eventId <= 0) {
-            logger.warn("Invalid event ID: {}", eventId);
-            throw new IllegalArgumentException("Event ID must be greater than 0");
+            logger.warn(LOG_INVALID_EVENT_ID, eventId);
+            throw new IllegalArgumentException(ERR_EVENT_ID_INVALID);
         }
         
         logger.debug("Querying database for average rating for event ID: {}", eventId);

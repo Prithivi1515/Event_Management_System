@@ -8,6 +8,7 @@ class ConfigServerApplicationTests {
 
 	@Test
 	void contextLoads() {
+		// Test is successful if application context loads without errors
 	}
 
 }

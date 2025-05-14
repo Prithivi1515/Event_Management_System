@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +17,29 @@ import com.example.demo.repository.EventRepository;
 public class EventServiceImpl implements EventService {
 
     private static final Logger logger = LoggerFactory.getLogger(EventServiceImpl.class);
+    
+    // Log message constants
+    private static final String LOG_EVENT_NOT_FOUND = "Event not found with ID: {}";
+    private static final String LOG_FETCH_EVENT = "Fetching event with ID: {}";
+    private static final String LOG_UPDATE_ATTEMPT = "Attempting to update event with ID: {}";
+    private static final String LOG_DELETE_ATTEMPT = "Attempting to delete event with ID: {}";
+    private static final String LOG_TICKET_COUNT_DECREASE = "Attempting to decrease ticket count for event ID: {}";
+    private static final String LOG_TICKET_COUNT_INCREASE = "Attempting to increase ticket count for event ID: {}";
+    
+    // Error message constants
+    private static final String ERR_EVENT_NOT_FOUND = "Event not found with ID: ";
+    private static final String ERR_CANNOT_UPDATE = "Cannot update: Event not found with ID: ";
+    private static final String ERR_NO_TICKETS = "No tickets available for event with ID: ";
+    private static final String ERR_DB_DECREASE = "Failed to decrease ticket count due to database error";
+    private static final String ERR_DB_INCREASE = "Failed to increase ticket count due to database error";
 
-    @Autowired
-    private EventRepository repository;
+    private final EventRepository repository;
+    private final UserClient userClient;
 
-    @Autowired
-    private UserClient userClient;
+    public EventServiceImpl(EventRepository repository, UserClient userClient) {
+        this.repository = repository;
+        this.userClient = userClient;
+    }
 
     @Override
     public String createEvent(Event event) {
@@ -56,12 +72,12 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Event getEventById(int eventId) throws EventNotFoundException {
-        logger.debug("Fetching event with ID: {}", eventId);
+        logger.debug(LOG_FETCH_EVENT, eventId);
         
         return repository.findById(eventId)
                 .orElseThrow(() -> {
-                    logger.error("Event not found with ID: {}", eventId);
-                    return new EventNotFoundException("Event not found with ID: " + eventId);
+                    logger.error(LOG_EVENT_NOT_FOUND, eventId);
+                    return new EventNotFoundException(ERR_EVENT_NOT_FOUND + eventId);
                 });
     }
 
@@ -81,11 +97,11 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public String updateEvent(int eventId, Event event) throws EventNotFoundException {
-        logger.info("Attempting to update event with ID: {}", eventId);
+        logger.info(LOG_UPDATE_ATTEMPT, eventId);
         
         if (!repository.existsById(eventId)) {
-            logger.error("Cannot update: Event not found with ID: {}", eventId);
-            throw new EventNotFoundException("Cannot update: Event not found with ID: " + eventId);
+            logger.error(LOG_EVENT_NOT_FOUND, eventId);
+            throw new EventNotFoundException(ERR_CANNOT_UPDATE + eventId);
         }
         
         event.setEventId(eventId); // Ensure the ID matches
@@ -96,12 +112,12 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public String deleteEvent(int eventId) throws EventNotFoundException {
-        logger.info("Attempting to delete event with ID: {}", eventId);
+        logger.info(LOG_DELETE_ATTEMPT, eventId);
         
         Event event = repository.findById(eventId)
                 .orElseThrow(() -> {
-                    logger.error("Cannot delete: Event not found with ID: {}", eventId);
-                    return new EventNotFoundException("Event not found with ID: " + eventId);
+                    logger.error(LOG_EVENT_NOT_FOUND, eventId);
+                    return new EventNotFoundException(ERR_EVENT_NOT_FOUND + eventId);
                 });
                 
         repository.delete(event);
@@ -113,7 +129,6 @@ public class EventServiceImpl implements EventService {
     public List<Event> filterByCategory(String category) throws EventNotFoundException {
         logger.debug("Filtering events by category: {}", category);
         
-        // Fixed method call to match repository interface
         List<Event> events = repository.findByCategoryIgnoreCase(category);
         if (events.isEmpty()) {
             logger.warn("No events found for category: {}", category);
@@ -128,7 +143,6 @@ public class EventServiceImpl implements EventService {
     public List<Event> filterByLocation(String location) throws EventNotFoundException {
         logger.debug("Filtering events by location: {}", location);
         
-        // Fixed method call to match repository interface
         List<Event> events = repository.findByLocationIgnoreCase(location);
         if (events.isEmpty()) {
             logger.warn("No events found for location: {}", location);
@@ -170,13 +184,13 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public void decreaseTicketCount(int eventId) throws EventNotFoundException, IllegalArgumentException {
-        logger.info("Attempting to decrease ticket count for event ID: {}", eventId);
+        logger.info(LOG_TICKET_COUNT_DECREASE, eventId);
         
         // Use pessimistic locking to prevent race conditions
         Event event = repository.findById(eventId)
                 .orElseThrow(() -> {
-                    logger.error("Event not found with ID: {}", eventId);
-                    return new EventNotFoundException("Event not found with ID: " + eventId);
+                    logger.error(LOG_EVENT_NOT_FOUND, eventId);
+                    return new EventNotFoundException(ERR_EVENT_NOT_FOUND + eventId);
                 });
                 
         // Validate ticket availability
@@ -185,7 +199,7 @@ public class EventServiceImpl implements EventService {
         
         if (currentCount <= 0) {
             logger.warn("No tickets available for event ID: {}", eventId);
-            throw new IllegalArgumentException("No tickets available for event with ID: " + eventId);
+            throw new IllegalArgumentException(ERR_NO_TICKETS + eventId);
         }
         
         // Update ticket count
@@ -199,20 +213,20 @@ public class EventServiceImpl implements EventService {
                     eventId, currentCount - 1);
         } catch (Exception e) {
             logger.error("Database error decreasing ticket count for event ID {}: {}", eventId, e.getMessage(), e);
-            throw new RuntimeException("Failed to decrease ticket count due to database error", e);
+            throw new RuntimeException(ERR_DB_DECREASE, e);
         }
     }
 
     @Override
     @Transactional
     public void increaseTicketCount(int eventId) throws EventNotFoundException {
-        logger.info("Attempting to increase ticket count for event ID: {}", eventId);
+        logger.info(LOG_TICKET_COUNT_INCREASE, eventId);
         
         // Use pessimistic locking to prevent race conditions
         Event event = repository.findById(eventId)
                 .orElseThrow(() -> {
-                    logger.error("Event not found with ID: {}", eventId);
-                    return new EventNotFoundException("Event not found with ID: " + eventId);
+                    logger.error(LOG_EVENT_NOT_FOUND, eventId);
+                    return new EventNotFoundException(ERR_EVENT_NOT_FOUND + eventId);
                 });
                 
         int currentCount = event.getTicketCount();
@@ -228,7 +242,7 @@ public class EventServiceImpl implements EventService {
                     eventId, currentCount + 1);
         } catch (Exception e) {
             logger.error("Database error increasing ticket count for event ID {}: {}", eventId, e.getMessage(), e);
-            throw new RuntimeException("Failed to increase ticket count due to database error", e);
+            throw new RuntimeException(ERR_DB_INCREASE, e);
         }
     }
 }

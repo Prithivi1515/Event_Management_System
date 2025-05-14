@@ -2,7 +2,6 @@ package com.example.demo.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,12 +18,13 @@ import com.example.demo.model.Event;
 import com.example.demo.service.EventService;
 
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 
 @RestController
 @RequestMapping("/event")
+@AllArgsConstructor
 public class EventController {
 
-    @Autowired
     private EventService service;
 
     @PostMapping("/create")

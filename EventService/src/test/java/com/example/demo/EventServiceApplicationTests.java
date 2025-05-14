@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -45,7 +44,6 @@ class EventServiceApplicationTests {
     @Mock
     private UserClient userClient;
     
-    @InjectMocks
     private EventServiceImpl service;
     
     private AutoCloseable closeable;
@@ -61,6 +59,9 @@ class EventServiceApplicationTests {
     void setup() {
         // Initialize mocks properly
         closeable = MockitoAnnotations.openMocks(this);
+        
+        // Manually create the service instance with constructor parameters
+        service = new EventServiceImpl(repository, userClient);
         
         // Create test event
         testEvent = new Event();

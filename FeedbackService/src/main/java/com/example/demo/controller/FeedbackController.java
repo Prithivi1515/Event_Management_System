@@ -1,6 +1,5 @@
 package com.example.demo.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,13 +12,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.model.Feedback;
 import com.example.demo.service.FeedbackService;
 
+import lombok.AllArgsConstructor;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/feedback")
+@AllArgsConstructor
 public class FeedbackController {
 
-    @Autowired
     FeedbackService service;
 
     @PostMapping("/save")

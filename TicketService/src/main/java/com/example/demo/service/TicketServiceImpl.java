@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,52 +21,72 @@ import com.example.demo.model.Ticket;
 import com.example.demo.model.Ticket.Status;
 import com.example.demo.repository.TicketRepository;
 
+import lombok.AllArgsConstructor;
+
 @Service
+@AllArgsConstructor
 public class TicketServiceImpl implements TicketService {
     
     private static final Logger logger = LoggerFactory.getLogger(TicketServiceImpl.class);
-
-    @Autowired
-    private TicketRepository repository;
-
-    @Autowired
-    private EventClient eventClient;
     
-    @Autowired
-    private UserClient userClient;
+    // Log message constants
+    private static final String LOG_VERIFY_USER_EXISTS = "Verifying user exists with ID: {}";
+    private static final String LOG_VERIFY_EVENT_EXISTS = "Verifying event exists with ID: {}";
+    private static final String LOG_INVALID_USER_ID = "Invalid user ID: {}";
+    private static final String LOG_INVALID_EVENT_ID = "Invalid event ID: {}";
+    private static final String LOG_INVALID_STATUS = "Invalid status: null";
+    private static final String LOG_BOOKING_ATTEMPT = "Attempting to book ticket for user ID: {} and event ID: {}";
+    private static final String LOG_TICKET_SAVED = "Ticket saved successfully with ID: {}";
+    private static final String LOG_USER_NOT_FOUND = "User not found with ID: {}";
+    private static final String LOG_EVENT_NOT_FOUND = "Event not found with ID: {}";
+    
+    // Error message constants
+    private static final String ERR_USER_ID_INVALID = "User ID must be greater than 0";
+    private static final String ERR_EVENT_ID_INVALID = "Event ID must be greater than 0";
+    private static final String ERR_STATUS_NULL = "Status cannot be null";
+    private static final String ERR_USER_NOT_FOUND = "User not found with ID: %d";
+    private static final String ERR_EVENT_NOT_FOUND = "Event not found with ID: %d";
+    private static final String ERR_NO_TICKETS = "No tickets available for event ID: %d";
+    private static final String ERR_DUPLICATE_TICKET = "Ticket already booked for user ID: %d and event ID: %d";
+    private static final String ERR_TICKET_ALREADY_CANCELLED = "Ticket with ID %d is already canceled";
+    private static final String ERR_TICKET_ID_INVALID = "Ticket ID must be greater than 0";
+    
+    // Dependencies
+    private final TicketRepository repository;
+    private final EventClient eventClient;
+    private final UserClient userClient;
+    private final NotificationClient notificationClient;
 
-    @Autowired
-    private NotificationClient notificationClient;
 
     @Override
     @Transactional
     public Ticket bookTicket(Ticket ticket) throws UserNotFoundException, EventNotFoundException {
-        logger.info("Attempting to book ticket for user ID: {} and event ID: {}", ticket.getUserId(), ticket.getEventId());
+        logger.info(LOG_BOOKING_ATTEMPT, ticket.getUserId(), ticket.getEventId());
         
         if (ticket.getUserId() <= 0) {
-            logger.warn("Invalid user ID: {}", ticket.getUserId());
-            throw new IllegalArgumentException("User ID must be greater than 0");
+            logger.warn(LOG_INVALID_USER_ID, ticket.getUserId());
+            throw new IllegalArgumentException(ERR_USER_ID_INVALID);
         }
         
         if (ticket.getEventId() <= 0) {
-            logger.warn("Invalid event ID: {}", ticket.getEventId());
-            throw new IllegalArgumentException("Event ID must be greater than 0");
+            logger.warn(LOG_INVALID_EVENT_ID, ticket.getEventId());
+            throw new IllegalArgumentException(ERR_EVENT_ID_INVALID);
         }
         
         // Check if the user exists
-        logger.debug("Verifying user exists with ID: {}", ticket.getUserId());
+        logger.debug(LOG_VERIFY_USER_EXISTS, ticket.getUserId());
         User user = userClient.getUserById(ticket.getUserId());
         if (user == null) {
-            logger.error("User not found with ID: {}", ticket.getUserId());
-            throw new UserNotFoundException("User not found with ID: " + ticket.getUserId());
+            logger.error(LOG_USER_NOT_FOUND, ticket.getUserId());
+            throw new UserNotFoundException(String.format(ERR_USER_NOT_FOUND, ticket.getUserId()));
         }
         
         // Check if the event exists and has available tickets
-        logger.debug("Verifying event exists with ID: {}", ticket.getEventId());
+        logger.debug(LOG_VERIFY_EVENT_EXISTS, ticket.getEventId());
         Event event = eventClient.getEventById(ticket.getEventId());
         if (event == null) {
-            logger.error("Event not found with ID: {}", ticket.getEventId());
-            throw new EventNotFoundException("Event not found with ID: " + ticket.getEventId());
+            logger.error(LOG_EVENT_NOT_FOUND, ticket.getEventId());
+            throw new EventNotFoundException(String.format(ERR_EVENT_NOT_FOUND, ticket.getEventId()));
         }
         
         // Check if event has available tickets
@@ -75,7 +94,7 @@ public class TicketServiceImpl implements TicketService {
                 ticket.getEventId(), event.getTicketCount());
         if (event.getTicketCount() <= 0) {
             logger.warn("No tickets available for event ID: {}", ticket.getEventId());
-            throw new IllegalArgumentException("No tickets available for event ID: " + ticket.getEventId());
+            throw new IllegalArgumentException(String.format(ERR_NO_TICKETS, ticket.getEventId()));
         }
 
         // Check for duplicate ticket booking
@@ -84,8 +103,8 @@ public class TicketServiceImpl implements TicketService {
         if (repository.existsByUserIdAndEventId(ticket.getUserId(), ticket.getEventId())) {
             logger.warn("Duplicate booking attempt - user ID: {} already has a ticket for event ID: {}", 
                     ticket.getUserId(), ticket.getEventId());
-            throw new IllegalArgumentException("Ticket already booked for user ID: " + ticket.getUserId() + 
-                                              " and event ID: " + ticket.getEventId());
+            throw new IllegalArgumentException(
+                    String.format(ERR_DUPLICATE_TICKET, ticket.getUserId(), ticket.getEventId()));
         }
 
         // Set ticket details
@@ -95,7 +114,7 @@ public class TicketServiceImpl implements TicketService {
         // Save the ticket first - if this fails, we won't decrease the ticket count
         logger.debug("Saving ticket to database");
         Ticket savedTicket = repository.save(ticket);
-        logger.info("Ticket saved successfully with ID: {}", savedTicket.getTicketId());
+        logger.info(LOG_TICKET_SAVED, savedTicket.getTicketId());
         
         try {
             // Now decrease ticket count
@@ -104,10 +123,12 @@ public class TicketServiceImpl implements TicketService {
             logger.info("Ticket count decreased successfully for event ID: {}", ticket.getEventId());
         } catch (Exception e) {
             // If decreasing ticket count fails, delete the saved ticket to maintain consistency
-            logger.error("Failed to decrease ticket count for event ID: {}: {}", ticket.getEventId(), e.getMessage());
+            logger.error("Failed to decrease ticket count for event ID: {}: {}", 
+                    ticket.getEventId(), e.getMessage(), e);
             logger.debug("Deleting ticket ID: {} to maintain consistency", savedTicket.getTicketId());
             repository.delete(savedTicket);
-            throw new RuntimeException("Failed to decrease ticket count: " + e.getMessage(), e);
+            throw new RuntimeException(
+                    String.format("Failed to decrease ticket count for event ID: %d", ticket.getEventId()), e);
         }
 
         // Only send notification if everything else succeeded
@@ -123,7 +144,8 @@ public class TicketServiceImpl implements TicketService {
         } catch (Exception e) {
             // Log the notification failure but don't roll back the transaction
             logger.warn("Failed to send booking notification to user ID: {}: {}", 
-                    ticket.getUserId(), e.getMessage());
+                    ticket.getUserId(), e.getMessage(), e);
+            // Non-critical operation, don't rethrow
         }
 
         logger.info("Ticket booking completed successfully - ticket ID: {}, user ID: {}, event ID: {}", 
@@ -137,13 +159,14 @@ public class TicketServiceImpl implements TicketService {
         
         if (ticketId <= 0) {
             logger.warn("Invalid ticket ID: {}", ticketId);
-            throw new IllegalArgumentException("Ticket ID must be greater than 0");
+            throw new IllegalArgumentException(ERR_TICKET_ID_INVALID);
         }
         
         return repository.findById(ticketId)
                 .orElseThrow(() -> {
                     logger.error("Ticket not found with ID: {}", ticketId);
-                    return new TicketNotFoundException("Ticket not found with ID: " + ticketId);
+                    return new TicketNotFoundException(
+                            String.format("Ticket not found with ID: %d", ticketId));
                 });
     }
 
@@ -166,16 +189,16 @@ public class TicketServiceImpl implements TicketService {
         logger.debug("Retrieving tickets for user ID: {}", userId);
         
         if (userId <= 0) {
-            logger.warn("Invalid user ID: {}", userId);
-            throw new IllegalArgumentException("User ID must be greater than 0");
+            logger.warn(LOG_INVALID_USER_ID, userId);
+            throw new IllegalArgumentException(ERR_USER_ID_INVALID);
         }
         
         // Verify user exists
-        logger.debug("Verifying user exists with ID: {}", userId);
+        logger.debug(LOG_VERIFY_USER_EXISTS, userId);
         User user = userClient.getUserById(userId);
         if (user == null) {
-            logger.error("User not found with ID: {}", userId);
-            throw new UserNotFoundException("User not found with ID: " + userId);
+            logger.error(LOG_USER_NOT_FOUND, userId);
+            throw new UserNotFoundException(String.format(ERR_USER_NOT_FOUND, userId));
         }
         
         List<Ticket> tickets = repository.findByUserId(userId);
@@ -192,16 +215,16 @@ public class TicketServiceImpl implements TicketService {
         logger.debug("Retrieving tickets for event ID: {}", eventId);
         
         if (eventId <= 0) {
-            logger.warn("Invalid event ID: {}", eventId);
-            throw new IllegalArgumentException("Event ID must be greater than 0");
+            logger.warn(LOG_INVALID_EVENT_ID, eventId);
+            throw new IllegalArgumentException(ERR_EVENT_ID_INVALID);
         }
         
         // Verify event exists
-        logger.debug("Verifying event exists with ID: {}", eventId);
+        logger.debug(LOG_VERIFY_EVENT_EXISTS, eventId);
         Event event = eventClient.getEventById(eventId);
         if (event == null) {
-            logger.error("Event not found with ID: {}", eventId);
-            throw new EventNotFoundException("Event not found with ID: " + eventId);
+            logger.error(LOG_EVENT_NOT_FOUND, eventId);
+            throw new EventNotFoundException(String.format(ERR_EVENT_NOT_FOUND, eventId));
         }
         
         List<Ticket> tickets = repository.findByEventId(eventId);
@@ -226,7 +249,7 @@ public class TicketServiceImpl implements TicketService {
         // Check if the ticket is already canceled
         if (ticket.getStatus() == Status.CANCELLED) {
             logger.warn("Ticket ID: {} is already canceled", ticketId);
-            throw new IllegalArgumentException("Ticket with ID " + ticketId + " is already canceled.");
+            throw new IllegalArgumentException(String.format(ERR_TICKET_ALREADY_CANCELLED, ticketId));
         }
 
         // Try to increase ticket count BEFORE marking ticket as cancelled
@@ -236,10 +259,11 @@ public class TicketServiceImpl implements TicketService {
             eventClient.increaseTicketCount(ticket.getEventId());
             logger.info("Ticket count increased successfully for event ID: {}", ticket.getEventId());
         } catch (Exception e) {
-            // Log the error and throw a more specific exception
-            String errorMessage = "Failed to increase event ticket count: " + e.getMessage();
-            logger.error("Failed to increase ticket count for event ID: {}: {}", ticket.getEventId(), e.getMessage());
-            throw new RuntimeException(errorMessage, e); 
+            // Log the error with contextual information and rethrow
+            String errorMessage = String.format("Failed to increase event ticket count for event ID: %d", 
+                    ticket.getEventId());
+            logger.error("{}: {}", errorMessage, e.getMessage(), e);
+            throw new RuntimeException(errorMessage, e);
         }
 
         // Now that ticket count is increased, mark ticket as cancelled
@@ -261,7 +285,7 @@ public class TicketServiceImpl implements TicketService {
         } catch (Exception e) {
             // Log notification failure but don't fail the cancellation
             logger.warn("Failed to send cancellation notification to user ID: {}: {}", 
-                    ticket.getUserId(), e.getMessage());
+                    ticket.getUserId(), e.getMessage(), e);
         }
         
         return savedTicket;
@@ -272,8 +296,8 @@ public class TicketServiceImpl implements TicketService {
         logger.debug("Retrieving tickets with status: {}", status);
         
         if (status == null) {
-            logger.warn("Invalid status: null");
-            throw new IllegalArgumentException("Status cannot be null");
+            logger.warn(LOG_INVALID_STATUS);
+            throw new IllegalArgumentException(ERR_STATUS_NULL);
         }
         
         List<Ticket> tickets = repository.findByStatus(status);
@@ -286,21 +310,21 @@ public class TicketServiceImpl implements TicketService {
         logger.debug("Retrieving tickets for user ID: {} with status: {}", userId, status);
         
         if (userId <= 0) {
-            logger.warn("Invalid user ID: {}", userId);
-            throw new IllegalArgumentException("User ID must be greater than 0");
+            logger.warn(LOG_INVALID_USER_ID, userId);
+            throw new IllegalArgumentException(ERR_USER_ID_INVALID);
         }
         
         if (status == null) {
-            logger.warn("Invalid status: null");
-            throw new IllegalArgumentException("Status cannot be null");
+            logger.warn(LOG_INVALID_STATUS);
+            throw new IllegalArgumentException(ERR_STATUS_NULL);
         }
         
         // Verify user exists
-        logger.debug("Verifying user exists with ID: {}", userId);
+        logger.debug(LOG_VERIFY_USER_EXISTS, userId);
         User user = userClient.getUserById(userId);
         if (user == null) {
-            logger.error("User not found with ID: {}", userId);
-            throw new UserNotFoundException("User not found with ID: " + userId);
+            logger.error(LOG_USER_NOT_FOUND, userId);
+            throw new UserNotFoundException(String.format(ERR_USER_NOT_FOUND, userId));
         }
         
         List<Ticket> tickets = repository.findByUserIdAndStatus(userId, status);
@@ -313,21 +337,21 @@ public class TicketServiceImpl implements TicketService {
         logger.debug("Retrieving tickets for event ID: {} with status: {}", eventId, status);
         
         if (eventId <= 0) {
-            logger.warn("Invalid event ID: {}", eventId);
-            throw new IllegalArgumentException("Event ID must be greater than 0");
+            logger.warn(LOG_INVALID_EVENT_ID, eventId);
+            throw new IllegalArgumentException(ERR_EVENT_ID_INVALID);
         }
         
         if (status == null) {
-            logger.warn("Invalid status: null");
-            throw new IllegalArgumentException("Status cannot be null");
+            logger.warn(LOG_INVALID_STATUS);
+            throw new IllegalArgumentException(ERR_STATUS_NULL);
         }
         
         // Verify event exists
-        logger.debug("Verifying event exists with ID: {}", eventId);
+        logger.debug(LOG_VERIFY_EVENT_EXISTS, eventId);
         Event event = eventClient.getEventById(eventId);
         if (event == null) {
-            logger.error("Event not found with ID: {}", eventId);
-            throw new EventNotFoundException("Event not found with ID: " + eventId);
+            logger.error(LOG_EVENT_NOT_FOUND, eventId);
+            throw new EventNotFoundException(String.format(ERR_EVENT_NOT_FOUND, eventId));
         }
         
         List<Ticket> tickets = repository.findByEventIdAndStatus(eventId, status);
@@ -340,13 +364,13 @@ public class TicketServiceImpl implements TicketService {
         logger.debug("Checking if user ID: {} has booked event ID: {}", userId, eventId);
         
         if (userId <= 0) {
-            logger.warn("Invalid user ID: {}", userId);
-            throw new IllegalArgumentException("User ID must be greater than 0");
+            logger.warn(LOG_INVALID_USER_ID, userId);
+            throw new IllegalArgumentException(ERR_USER_ID_INVALID);
         }
         
         if (eventId <= 0) {
-            logger.warn("Invalid event ID: {}", eventId);
-            throw new IllegalArgumentException("Event ID must be greater than 0");
+            logger.warn(LOG_INVALID_EVENT_ID, eventId);
+            throw new IllegalArgumentException(ERR_EVENT_ID_INVALID);
         }
         
         boolean hasBooked = repository.existsByUserIdAndEventId(userId, eventId);
