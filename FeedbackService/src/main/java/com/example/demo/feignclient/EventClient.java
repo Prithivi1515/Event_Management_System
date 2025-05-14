@@ -10,7 +10,6 @@ import com.example.demo.dto.Event;
 public interface EventClient {
 
     @GetMapping("/getEventById/{id}")
-    public Event getEventById(@PathVariable("id") int eventId);
-    
+    public Event getEventById(@PathVariable("id") int eventId);    
     
 }

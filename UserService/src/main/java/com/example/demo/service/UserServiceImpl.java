@@ -5,7 +5,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
@@ -24,12 +23,11 @@ public class UserServiceImpl implements UserService {
     public String saveUser(User user) {
         logger.info("Attempting to save new user with email: {}", user.getEmail());
         
-        // Check for duplicate email using the correct method name
+        // Check for duplicate email 
         if (repository.existsByEmailIgnoreCase(user.getEmail())) {
             logger.warn("Registration failed: Email already exists: {}", user.getEmail());
             throw new IllegalArgumentException("Email already exists: " + user.getEmail());
         }
-        
         repository.save(user);
         logger.info("User saved successfully with ID: {}", user.getUserId());
         return "User saved successfully!";

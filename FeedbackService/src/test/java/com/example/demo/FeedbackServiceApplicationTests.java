@@ -27,11 +27,13 @@ import org.slf4j.LoggerFactory;
 
 import com.example.demo.dto.Event;
 import com.example.demo.dto.User;
+import com.example.demo.dto.Ticket;
 import com.example.demo.exception.EventNotFoundException;
 import com.example.demo.exception.FeedbackNotFoundException;
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.feignclient.EventClient;
 import com.example.demo.feignclient.UserClient;
+import com.example.demo.feignclient.TicketClient;
 import com.example.demo.model.Feedback;
 import com.example.demo.repository.FeedbackRepository;
 import com.example.demo.service.FeedbackServiceImpl;
@@ -50,6 +52,9 @@ class FeedbackServiceApplicationTests {
     
     @Mock
     private UserClient userClient;
+
+    @Mock
+    private TicketClient ticketClient;
     
     private FeedbackServiceImpl feedbackService;
     
@@ -69,7 +74,7 @@ class FeedbackServiceApplicationTests {
         closeable = MockitoAnnotations.openMocks(this);
         
         // Manually create the service instance with constructor parameters in the correct order
-        feedbackService = new FeedbackServiceImpl(feedbackRepository, eventClient, userClient);
+        feedbackService = new FeedbackServiceImpl(feedbackRepository, eventClient, userClient, ticketClient);
         
         // Create test user
         testUser = new User();
@@ -116,9 +121,18 @@ class FeedbackServiceApplicationTests {
         inputFeedback.setRating(5);
         inputFeedback.setComments("Good");
         
+        // Create a test ticket for validation
+        Ticket testTicket = new Ticket();
+        testTicket.setTicketId(1);
+        testTicket.setUserId(1);
+        testTicket.setEventId(1);
+        List<Ticket> tickets = Arrays.asList(testTicket);
+        
         when(userClient.getUserById(1)).thenReturn(testUser);
         when(eventClient.getEventById(1)).thenReturn(testEvent);
         when(feedbackRepository.existsByUserIdAndEventId(1, 1)).thenReturn(false);
+        // Add mock for ticket validation
+        when(ticketClient.getTicketsByUserId(1)).thenReturn(tickets);
         when(feedbackRepository.save(any(Feedback.class))).thenAnswer(invocation -> {
             Feedback savedFeedback = invocation.getArgument(0);
             savedFeedback.setFeedbackId(1); // Simulate DB assigning ID
@@ -138,6 +152,7 @@ class FeedbackServiceApplicationTests {
         // Verify interactions
         verify(userClient).getUserById(1);
         verify(eventClient).getEventById(1);
+        verify(ticketClient).getTicketsByUserId(1); // Verify ticket client was called
         verify(feedbackRepository).existsByUserIdAndEventId(1, 1);
         verify(feedbackRepository).save(any(Feedback.class));
     }

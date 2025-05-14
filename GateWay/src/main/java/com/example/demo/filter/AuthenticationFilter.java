@@ -70,25 +70,41 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             || path.startsWith("/notification");
         } 
         else if ("ORGANIZER".equalsIgnoreCase(role)) {
-            return path.startsWith("/user/update") || path.startsWith("/event/create")
-            || path.startsWith("/event/update") || path.startsWith("/event/delete")
-            || path.startsWith("/event/getAllEvents") 
-            || path.startsWith("/feedback/getAllFeedbacksByEvent") 
-            || path.startsWith("/feedback/getAverageRatingByEvent") 
-            || path.startsWith("/ticket/getAllTicketsByEventId") 
-            || path.startsWith("/feedback/getAllFeedbacksByEvent") ;
+            return path.startsWith("/user/update") || path.startsWith("/user/getUserById") 
+          
+            || path.startsWith("/event/create")  || path.startsWith("/event/update") 
+            || path.startsWith("/event/delete") || path.startsWith("/event/filterByCategory") 
+            || path.startsWith("/event/getAllEvents") || path.startsWith("/event/getEventById") 
+            || path.startsWith("/event/organizer")  || path.startsWith(" /event/search")
+            || path.startsWith("/event/filterByLocation") 
+            
+            || path.startsWith("/feedback/getByFeedbackId") || path.startsWith("/feedback/getAllFeedbacksByUser") 
+            || path.startsWith("/feedback/getAllFeedbacksByEvent") || path.startsWith("/feedback/getAverageRatingByEvent") 
+            
+            || path.startsWith("/notification/getAllNotificationsByEventId")
+
+            
+            || path.startsWith("/ticket/getTicketByEventId") ;
 
         }
         else if ("USER".equalsIgnoreCase(role)) {
-            return path.startsWith("/user/update") || path.startsWith("/event/getAllEvents")
-            || path.startsWith("/event/getEventById") || path.startsWith("/ticket/book")
+            return path.startsWith("/user/update") || path.startsWith("/user/getUserById") 
+            || path.startsWith("/event/getAllEvents")  || path.startsWith("/event/search")
+            || path.startsWith("/event/getEventById")   || path.startsWith("/event/filterByCategory") 
+            || path.startsWith("/event/filterByLocation") 
+            
+            || path.startsWith("/ticket/book")  || path.startsWith("/ticket/cancel")
             || path.startsWith("/ticket/getTicketById") || path.startsWith("/ticket/getTicketByUserId") 
-            ||path.startsWith("/event/filterByCategory")
+        
             || path.startsWith("/event/filterByLocation") 
             || path.startsWith("/event/getTicketByUserId") || path.startsWith("/ticket/cancel") 
+           
             || path.startsWith("/feedback/save") || path.startsWith("/feedback/update")
-            || path.startsWith("/feedback/delete") || path.startsWith("/feedback/getAllFeedbacksByUser")
-            || path.startsWith("/feedback/getById") || path.startsWith("/notification//getAllNotificationsByUserId");
+            || path.startsWith("/feedback/delete") || path.startsWith("/feedback/getByFeedbackId")
+            || path.startsWith("/feedback/getAllFeedbacksByUser") || path.startsWith("/feedback/getAllFeedbacksByEvent") 
+            || path.startsWith("/feedback/getAverageRatingByEvent")
+           
+            || path.startsWith("/notification/getAllNotificationsByUserId");
         }
 
         return false;

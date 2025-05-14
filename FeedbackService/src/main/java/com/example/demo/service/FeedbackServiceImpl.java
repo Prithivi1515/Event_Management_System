@@ -8,12 +8,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dto.Event;
+import com.example.demo.dto.Ticket;
 import com.example.demo.dto.User;
 import com.example.demo.exception.EventNotFoundException;
 import com.example.demo.exception.FeedbackNotFoundException;
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.feignclient.EventClient;
 import com.example.demo.feignclient.UserClient;
+import com.example.demo.feignclient.TicketClient;
 import com.example.demo.model.Feedback;
 import com.example.demo.repository.FeedbackRepository;
 
@@ -39,6 +41,7 @@ public class FeedbackServiceImpl implements FeedbackService {
     private final FeedbackRepository feedbackRepository;
     private final EventClient eventClient;
     private final UserClient userClient;
+    private final TicketClient ticketClient;
 
 
     @Override
@@ -79,6 +82,17 @@ public class FeedbackServiceImpl implements FeedbackService {
         }
         logger.debug("Event validated successfully: ID={}, name={}", event.getEventId(), event.getName());
 
+        // Check whether the user has got the ticket for the particular event using ticketClient
+        List<Ticket> tickets = ticketClient.getTicketsByUserId(feedback.getUserId());
+        logger.debug("Checking if user ID: {} has a ticket for event ID: {}", 
+                feedback.getUserId(), feedback.getEventId());
+        boolean hasTicket = tickets.stream().anyMatch(ticket -> ticket.getEventId() == feedback.getEventId());
+        if (!hasTicket) {
+            logger.warn("User ID: {} does not have a ticket for event ID: {}", 
+                    feedback.getUserId(), feedback.getEventId());
+            throw new UserNotFoundException("User does not have a ticket for this event.");
+        }
+                
         // Save feedback
         logger.debug("Setting timestamp and saving feedback");
         feedback.setTimestamp(LocalDateTime.now());

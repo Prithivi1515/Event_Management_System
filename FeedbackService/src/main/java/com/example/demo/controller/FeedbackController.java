@@ -39,7 +39,7 @@ public class FeedbackController {
         return "Feedback deleted successfully!";
     }
 
-    @GetMapping("/get/{fid}")
+    @GetMapping("/getByFeedbackId/{fid}")
     public Feedback getFeedbackById(@PathVariable("fid") int feedbackId) {
         return service.getFeedbackById(feedbackId);
     }

@@ -12,12 +12,12 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     // Find user by email (case-insensitive) using method name derivation
     Optional<User> findByEmailIgnoreCase(String email);
     
-    // Check if email exists (useful for registration validation)
+    // Check if email exists 
     boolean existsByEmailIgnoreCase(String email);
     
     // Find users by role
     List<User> findByRoles(String roles);
     
-    // Find users by name containing (partial match, case-insensitive)
+    // Find users by name containing (case-insensitive)
     List<User> findByNameContainingIgnoreCase(String name);
 }
