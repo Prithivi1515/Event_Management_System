@@ -43,19 +43,16 @@ public class RemainderScheduler {
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime reminderTime = now.plusHours(24);
 
-            // Fixed: use forEach with try-catch to handle individual ticket exceptions
             allTickets.forEach(ticket -> {
                 try {
                     processTicket(ticket, now, reminderTime);
                 } catch (Exception e) {
                     logger.log(Level.WARNING, 
                         "Error processing ticket ID: " + ticket.getTicketId(), e);
-                    // Continue with next ticket instead of failing the entire job
                 }
             });
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error in reminder scheduler job", e);
-            // Job continues to run at next scheduled interval
         }
     }
 
@@ -63,20 +60,20 @@ public class RemainderScheduler {
         // Validate ticket
         if (ticket.getEventId() <= 0 || ticket.getUserId() <= 0) {
             logger.warning(() -> "Invalid ticket data for ticket ID: " + ticket.getTicketId());
-            return;  // Skip invalid tickets instead of throwing exception
+            return;  
         }
 
         try {
             Event event = eventClient.getEventById(ticket.getEventId());
             if (event == null) {
                 logger.warning(() -> "Event not found for ticket ID: " + ticket.getTicketId());
-                return;  // Skip if event not found
+                return;  
             }
 
             LocalDateTime eventDateTime = event.getDate();
             if (eventDateTime == null) {
                 logger.warning(() -> "Event date is null for event ID: " + ticket.getEventId());
-                return;  // Skip if event date is null
+                return;
             }
 
             if (eventDateTime.isAfter(now) && eventDateTime.isBefore(reminderTime)) {

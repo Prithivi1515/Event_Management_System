@@ -81,7 +81,7 @@ public class TicketServiceImpl implements TicketService {
             throw new UserNotFoundException(String.format(ERR_USER_NOT_FOUND, ticket.getUserId()));
         }
         
-        // Check if the event exists and has available tickets
+        // Check if the event exists 
         logger.debug(LOG_VERIFY_EVENT_EXISTS, ticket.getEventId());
         Event event = eventClient.getEventById(ticket.getEventId());
         if (event == null) {
@@ -95,16 +95,6 @@ public class TicketServiceImpl implements TicketService {
         if (event.getTicketCount() <= 0) {
             logger.warn("No tickets available for event ID: {}", ticket.getEventId());
             throw new IllegalArgumentException(String.format(ERR_NO_TICKETS, ticket.getEventId()));
-        }
-
-        // Check for duplicate ticket booking
-        logger.debug("Checking for existing bookings for user ID: {} and event ID: {}", 
-                ticket.getUserId(), ticket.getEventId());
-        if (repository.existsByUserIdAndEventId(ticket.getUserId(), ticket.getEventId())) {
-            logger.warn("Duplicate booking attempt - user ID: {} already has a ticket for event ID: {}", 
-                    ticket.getUserId(), ticket.getEventId());
-            throw new IllegalArgumentException(
-                    String.format(ERR_DUPLICATE_TICKET, ticket.getUserId(), ticket.getEventId()));
         }
 
         // Set ticket details
@@ -272,7 +262,7 @@ public class TicketServiceImpl implements TicketService {
         Ticket savedTicket = repository.save(ticket);
         logger.info("Ticket ID: {} canceled successfully", ticket.getTicketId());
 
-        // Send notification (non-critical operation)
+        // Send notification 
         try {
             logger.debug("Sending cancellation notification to user ID: {}", ticket.getUserId());
             NotificationRequest notificationRequest = new NotificationRequest(
