@@ -58,10 +58,6 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         };
     }
 
-    //there are 3 roles: ADMIN, ORGANIZER, USER
-    // ADMIN can access all endpoints
-    // ORGANIZER can access update user, create event, update event, delete event,get feedback by event, get average rating by event, get all tickets by event id, get all feedbacks by event id, get all tickets by user id
-    // USER can access update user, get all events, get event by id, get all tickets, get ticket by id, get all feedbacks, get feedback by id, get all notifications, get notification by id
 
     private boolean isAuthorized(String role, String path) {
         if ("ADMIN".equalsIgnoreCase(role)) {

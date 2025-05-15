@@ -35,7 +35,7 @@ public class User {
 
     @NotBlank(message = "Password cannot be blank")
     @Column(nullable = false)
-    private String password; // This should be hashed before storing
+    private String password;
 
     @Pattern(regexp = "^\\+?\\d{10,15}$", message = "Contact number must be valid")
     @Column(nullable = true) // Made explicitly nullable since it's not marked with @NotBlank
