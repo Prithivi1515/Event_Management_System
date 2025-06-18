@@ -183,7 +183,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public void decreaseTicketCount(int eventId) throws EventNotFoundException, IllegalArgumentException {
+    public void decreaseTicketCount(int eventId,int quantity) throws EventNotFoundException, IllegalArgumentException {
         logger.info(LOG_TICKET_COUNT_DECREASE, eventId);
         
         // Use pessimistic locking to prevent race conditions
@@ -203,14 +203,14 @@ public class EventServiceImpl implements EventService {
         }
         
         // Update ticket count
-        event.setTicketCount(currentCount - 1);
+        event.setTicketCount(currentCount - quantity);
         logger.debug("Decreasing ticket count from {} to {} for event ID: {}", 
-                currentCount, currentCount - 1, eventId);
+                currentCount, currentCount - quantity, eventId);
         
         try {
             repository.save(event);
             logger.info("Ticket count decreased successfully for event ID: {}, new count: {}", 
-                    eventId, currentCount - 1);
+                    eventId, currentCount - quantity);
         } catch (Exception e) {
             logger.error("Database error decreasing ticket count for event ID {}: {}", eventId, e.getMessage(), e);
             throw new RuntimeException(ERR_DB_DECREASE, e);
@@ -219,7 +219,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public void increaseTicketCount(int eventId) throws EventNotFoundException {
+    public void increaseTicketCount(int eventId,int quantity) throws EventNotFoundException {
         logger.info(LOG_TICKET_COUNT_INCREASE, eventId);
         
         // Use pessimistic locking to prevent race conditions
@@ -232,14 +232,14 @@ public class EventServiceImpl implements EventService {
         int currentCount = event.getTicketCount();
         logger.debug("Current ticket count for event ID {}: {}", eventId, currentCount);
         
-        event.setTicketCount(currentCount + 1);
+        event.setTicketCount(currentCount + quantity);
         logger.debug("Increasing ticket count from {} to {} for event ID: {}", 
-                currentCount, currentCount + 1, eventId);
+                currentCount, currentCount + quantity, eventId);
         
         try {
             repository.save(event);
             logger.info("Ticket count increased successfully for event ID: {}, new count: {}", 
-                    eventId, currentCount + 1);
+                    eventId, currentCount + quantity);
         } catch (Exception e) {
             logger.error("Database error increasing ticket count for event ID {}: {}", eventId, e.getMessage(), e);
             throw new RuntimeException(ERR_DB_INCREASE, e);

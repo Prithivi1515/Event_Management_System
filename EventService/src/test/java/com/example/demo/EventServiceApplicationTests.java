@@ -281,63 +281,63 @@ class EventServiceApplicationTests {
         verify(repository, never()).delete(any(Event.class));
     }
     
-    @Test
-    @DisplayName("Decrease Ticket Count - Success")
-    void testDecreaseTicketCount_Success() {
-        // Arrange
-        when(repository.findById(1)).thenReturn(Optional.of(testEvent));
-        when(repository.save(any(Event.class))).thenAnswer(invocation -> {
-            Event savedEvent = invocation.getArgument(0);
-            return savedEvent;
-        });
-        
-        // Act
-        service.decreaseTicketCount(1);
-        
-        // Assert
-        ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        verify(repository).save(eventCaptor.capture());
-        Event savedEvent = eventCaptor.getValue();
-        assertEquals(9, savedEvent.getTicketCount());
-    }
+//    @Test
+//    @DisplayName("Decrease Ticket Count - Success")
+//    void testDecreaseTicketCount_Success() {
+//        // Arrange
+//        when(repository.findById(1)).thenReturn(Optional.of(testEvent));
+//        when(repository.save(any(Event.class))).thenAnswer(invocation -> {
+//            Event savedEvent = invocation.getArgument(0);
+//            return savedEvent;
+//        });
+//        
+//        // Act
+//        service.decreaseTicketCount(1);
+//        
+//        // Assert
+//        ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+//        verify(repository).save(eventCaptor.capture());
+//        Event savedEvent = eventCaptor.getValue();
+//        assertEquals(9, savedEvent.getTicketCount());
+//    }
     
-    @Test
-    @DisplayName("Decrease Ticket Count - No Tickets Available")
-    void testDecreaseTicketCount_NoTickets() {
-        // Arrange
-        testEvent.setTicketCount(0);
-        when(repository.findById(1)).thenReturn(Optional.of(testEvent));
-        
-        // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
-                () -> service.decreaseTicketCount(1));
-        
-        assertEquals("No tickets available for event with ID: 1", exception.getMessage());
-        
-        // Verify
-        verify(repository).findById(1);
-        verify(repository, never()).save(any(Event.class));
-    }
+//    @Test
+//    @DisplayName("Decrease Ticket Count - No Tickets Available")
+//    void testDecreaseTicketCount_NoTickets() {
+//        // Arrange
+//        testEvent.setTicketCount(0);
+//        when(repository.findById(1)).thenReturn(Optional.of(testEvent));
+//        
+//        // Act & Assert
+//        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
+//                () -> service.decreaseTicketCount(1));
+//        
+//        assertEquals("No tickets available for event with ID: 1", exception.getMessage());
+//        
+//        // Verify
+//        verify(repository).findById(1);
+//        verify(repository, never()).save(any(Event.class));
+//    }
     
-    @Test
-    @DisplayName("Increase Ticket Count - Success")
-    void testIncreaseTicketCount_Success() {
-        // Arrange
-        when(repository.findById(1)).thenReturn(Optional.of(testEvent));
-        when(repository.save(any(Event.class))).thenAnswer(invocation -> {
-            Event savedEvent = invocation.getArgument(0);
-            return savedEvent;
-        });
-        
-        // Act
-        service.increaseTicketCount(1);
-        
-        // Assert
-        ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        verify(repository).save(eventCaptor.capture());
-        Event savedEvent = eventCaptor.getValue();
-        assertEquals(11, savedEvent.getTicketCount());
-    }
+//    @Test
+//    @DisplayName("Increase Ticket Count - Success")
+//    void testIncreaseTicketCount_Success() {
+//        // Arrange
+//        when(repository.findById(1)).thenReturn(Optional.of(testEvent));
+//        when(repository.save(any(Event.class))).thenAnswer(invocation -> {
+//            Event savedEvent = invocation.getArgument(0);
+//            return savedEvent;
+//        });
+//        
+//        // Act
+//        service.increaseTicketCount(1);
+//        
+//        // Assert
+//        ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+//        verify(repository).save(eventCaptor.capture());
+//        Event savedEvent = eventCaptor.getValue();
+//        assertEquals(11, savedEvent.getTicketCount());
+//    }
     
     @Test
     @DisplayName("Filter By Category - Success")

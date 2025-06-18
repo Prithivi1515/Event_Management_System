@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.model.Event;
 import com.example.demo.service.EventService;
+import com.example.demo.exception.EventNotFoundException;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 
 @RestController
@@ -97,20 +99,30 @@ public class EventController {
     }
 
     @PutMapping("/decreaseTicketCount/{eventId}")
-    public ResponseEntity<String> decreaseTicketCount(@PathVariable("eventId") int eventId) {
-        if (eventId <= 0) {
-            throw new IllegalArgumentException("Event ID must be greater than 0");
+    public ResponseEntity<String> decreaseTicketCount(
+            @PathVariable("eventId") @Min(value = 1, message = "Event ID must be greater than 0") int eventId,
+            @RequestParam(value = "quantity", defaultValue = "1") @Min(value = 1, message = "Quantity must be greater than 0") int quantity) {
+        
+        try {
+            service.decreaseTicketCount(eventId, quantity);
+            return ResponseEntity.ok("Ticket count decreased successfully");
+        } catch (EventNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        service.decreaseTicketCount(eventId);
-        return ResponseEntity.ok("Ticket count decreased successfully");
     }
 
     @PutMapping("/increaseTicketCount/{eventId}")
-    public ResponseEntity<String> increaseTicketCount(@PathVariable("eventId") int eventId) {
-        if (eventId <= 0) {
-            throw new IllegalArgumentException("Event ID must be greater than 0");
+    public ResponseEntity<String> increaseTicketCount(
+            @PathVariable("eventId") @Min(value = 1, message = "Event ID must be greater than 0") int eventId,
+            @RequestParam(value = "quantity", defaultValue = "1") @Min(value = 1, message = "Quantity must be greater than 0") int quantity) {
+        
+        try {
+            service.increaseTicketCount(eventId, quantity);
+            return ResponseEntity.ok("Ticket count increased successfully");
+        } catch (EventNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
-        service.increaseTicketCount(eventId);
-        return ResponseEntity.ok("Ticket count increased successfully");
     }
 }

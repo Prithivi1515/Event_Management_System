@@ -100,6 +100,7 @@ public class TicketServiceImpl implements TicketService {
         // Set ticket details
         ticket.setBookingDate(LocalDateTime.now());
         ticket.setStatus(Status.BOOKED);
+        int quantity =ticket.getQuantity();
         
         // Save the ticket first - if this fails, we won't decrease the ticket count
         logger.debug("Saving ticket to database");
@@ -109,7 +110,7 @@ public class TicketServiceImpl implements TicketService {
         try {
             // Now decrease ticket count
             logger.debug("Decreasing ticket count for event ID: {}", ticket.getEventId());
-            eventClient.decreaseTicketCount(ticket.getEventId());
+            eventClient.decreaseTicketCount(ticket.getEventId(),quantity);
             logger.info("Ticket count decreased successfully for event ID: {}", ticket.getEventId());
         } catch (Exception e) {
             // If decreasing ticket count fails, delete the saved ticket to maintain consistency
@@ -241,12 +242,14 @@ public class TicketServiceImpl implements TicketService {
             logger.warn("Ticket ID: {} is already canceled", ticketId);
             throw new IllegalArgumentException(String.format(ERR_TICKET_ALREADY_CANCELLED, ticketId));
         }
+        int quantity =ticket.getQuantity();
+
 
         // Try to increase ticket count BEFORE marking ticket as cancelled
         try {
             logger.debug("Increasing ticket count for event ID: {}", ticket.getEventId());
             // Increase ticket count in event service first
-            eventClient.increaseTicketCount(ticket.getEventId());
+            eventClient.increaseTicketCount(ticket.getEventId(),quantity);
             logger.info("Ticket count increased successfully for event ID: {}", ticket.getEventId());
         } catch (Exception e) {
             // Log the error with contextual information and rethrow

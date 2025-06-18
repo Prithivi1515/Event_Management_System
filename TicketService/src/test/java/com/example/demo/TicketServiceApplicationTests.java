@@ -44,7 +44,7 @@ class TicketServiceApplicationTests {
     private static final Logger logger = LoggerFactory.getLogger(TicketServiceApplicationTests.class);
 
     @Mock
-    private TicketRepository repository; // Renamed to match implementation field name
+    private TicketRepository repository; 
 
     @Mock
     private EventClient eventClient;
@@ -55,7 +55,6 @@ class TicketServiceApplicationTests {
     @Mock
     private NotificationClient notificationClient;
     
-    // No @InjectMocks - we'll create the service manually to match constructor order
     private TicketServiceImpl ticketService;
     
     private AutoCloseable closeable;
@@ -125,7 +124,7 @@ class TicketServiceApplicationTests {
         when(eventClient.getEventById(anyInt())).thenReturn(event);
         when(repository.existsByUserIdAndEventId(anyInt(), anyInt())).thenReturn(false);
         when(repository.save(any(Ticket.class))).thenReturn(ticket);
-        doNothing().when(eventClient).decreaseTicketCount(anyInt());
+        doNothing().when(eventClient).decreaseTicketCount(anyInt(),anyInt());
         doNothing().when(notificationClient).sendNotification(any(NotificationRequest.class));
         
         // Act
@@ -141,7 +140,7 @@ class TicketServiceApplicationTests {
         verify(eventClient).getEventById(20);
         verify(repository).existsByUserIdAndEventId(10, 20);
         verify(repository).save(any(Ticket.class));
-        verify(eventClient).decreaseTicketCount(20);
+        verify(eventClient).decreaseTicketCount(20,1);
         verify(notificationClient).sendNotification(any(NotificationRequest.class));
         
         logger.info("Book ticket test completed successfully");
@@ -230,7 +229,7 @@ class TicketServiceApplicationTests {
             t.setStatus(Status.CANCELLED); // Ensure status is set correctly
             return t;
         });
-        doNothing().when(eventClient).increaseTicketCount(anyInt());
+        doNothing().when(eventClient).increaseTicketCount(anyInt(),anyInt());
         doNothing().when(notificationClient).sendNotification(any(NotificationRequest.class));
         
         // Act
@@ -242,7 +241,7 @@ class TicketServiceApplicationTests {
         
         // Verify interactions
         verify(repository).findById(1);
-        verify(eventClient).increaseTicketCount(20);
+        verify(eventClient).increaseTicketCount(20,1);
         verify(repository).save(any(Ticket.class));
         verify(notificationClient).sendNotification(any(NotificationRequest.class));
         
@@ -268,7 +267,7 @@ class TicketServiceApplicationTests {
         
         // Verify interactions
         verify(repository).findById(1);
-        verify(eventClient, never()).increaseTicketCount(anyInt());
+        verify(eventClient, never()).increaseTicketCount(anyInt(),anyInt());
         verify(repository, never()).save(any(Ticket.class));
         
         logger.info("Already cancelled ticket test completed successfully");

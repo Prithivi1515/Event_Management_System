@@ -4,6 +4,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.demo.dto.Event;
 
@@ -14,8 +15,12 @@ public interface EventClient {
     public Event getEventById(@PathVariable("id") int eventId);
 
     @PutMapping("/decreaseTicketCount/{eventId}")
-    public void decreaseTicketCount(@PathVariable("eventId") int eventId);
+    public void decreaseTicketCount(
+            @PathVariable("eventId") int eventId,
+            @RequestParam("quantity") int quantity);
 
     @PutMapping("/increaseTicketCount/{eventId}")
-    public void increaseTicketCount(@PathVariable("eventId") int eventId);
+    public void increaseTicketCount(
+            @PathVariable("eventId") int eventId,
+            @RequestParam("quantity") int quantity);
 }

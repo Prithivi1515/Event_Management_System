@@ -21,7 +21,6 @@ import com.service.UserService;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin("*")
 public class AuthController {
 
     @Autowired
@@ -61,7 +60,7 @@ public class AuthController {
                 throw new IllegalArgumentException("User roles are not defined for username: " + authRequest.getUsername());
             }
 
-            return jwtService.generateToken(authRequest.getUsername(), roles);
+            return jwtService.generateToken(authRequest.getUsername(), roles,userInfo.getUserId());
         } else {
             throw new UsernameNotFoundException("Invalid user credentials!");
         }

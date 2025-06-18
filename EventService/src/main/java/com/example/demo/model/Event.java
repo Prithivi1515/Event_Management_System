@@ -42,5 +42,8 @@ public class Event {
 
     @Min(value = 0, message = "Ticket count cannot be negative")
     private int ticketCount;
+    
+    @Min(value=1, message = "Ticket price must be greater than 0")
+    private int ticketPrice;
 }
 

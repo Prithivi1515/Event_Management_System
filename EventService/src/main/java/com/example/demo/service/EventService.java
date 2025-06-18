@@ -25,7 +25,7 @@ public interface EventService {
     
     List<Event> getEventsByOrganizer(int organizerId) throws EventNotFoundException;
 
-    void decreaseTicketCount(int eventId) throws EventNotFoundException, IllegalArgumentException;
+    void decreaseTicketCount(int eventId,int quantity) throws EventNotFoundException, IllegalArgumentException;
 
-    void increaseTicketCount(int eventId) throws EventNotFoundException, IllegalArgumentException;
+    void increaseTicketCount(int eventId,int quantity) throws EventNotFoundException, IllegalArgumentException;
 }

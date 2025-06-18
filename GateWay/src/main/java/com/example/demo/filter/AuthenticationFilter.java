@@ -63,16 +63,14 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         if ("ADMIN".equalsIgnoreCase(role)) {
             return path.startsWith("/user") || path.startsWith("/event")
             || path.startsWith("/ticket") || path.startsWith("/feedback") 
-            || path.startsWith("/notification");
+            || path.startsWith("/notification"); 
         } 
         else if ("ORGANIZER".equalsIgnoreCase(role)) {
             return path.startsWith("/user/update") || path.startsWith("/user/getUserById") 
           
             || path.startsWith("/event/create")  || path.startsWith("/event/update") 
-            || path.startsWith("/event/delete") || path.startsWith("/event/filterByCategory") 
-            || path.startsWith("/event/getAllEvents") || path.startsWith("/event/getEventById") 
-            || path.startsWith("/event/organizer")  || path.startsWith(" /event/search")
-            || path.startsWith("/event/filterByLocation") 
+            || path.startsWith("/event/delete")  || path.startsWith("/event/getEventById") 
+            || path.startsWith("/event/organizer") 
             
             || path.startsWith("/feedback/getByFeedbackId") || path.startsWith("/feedback/getAllFeedbacksByUser") 
             || path.startsWith("/feedback/getAllFeedbacksByEvent") || path.startsWith("/feedback/getAverageRatingByEvent") 
@@ -85,9 +83,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         }
         else if ("USER".equalsIgnoreCase(role)) {
             return path.startsWith("/user/update") || path.startsWith("/user/getUserById") 
-            || path.startsWith("/event/getAllEvents")  || path.startsWith("/event/search")
-            || path.startsWith("/event/getEventById")   || path.startsWith("/event/filterByCategory") 
-            || path.startsWith("/event/filterByLocation") 
+            || path.startsWith("/event/getEventById")   
             
             || path.startsWith("/ticket/book")  || path.startsWith("/ticket/cancel")
             || path.startsWith("/ticket/getTicketById") || path.startsWith("/ticket/getTicketByUserId") 
@@ -100,7 +96,9 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             || path.startsWith("/feedback/getAllFeedbacksByUser") || path.startsWith("/feedback/getAllFeedbacksByEvent") 
             || path.startsWith("/feedback/getAverageRatingByEvent")
            
-            || path.startsWith("/notification/getAllNotificationsByUserId");
+            || path.startsWith("/notification/getAllNotificationsByUserId")
+            
+            || path.startsWith("/pay/createOrder");
         }
 
         return false;

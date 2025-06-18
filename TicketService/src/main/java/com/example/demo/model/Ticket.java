@@ -33,12 +33,13 @@ public class Ticket {
     @Min(value = 1, message = "User ID must be greater than 0")
     private int userId;
 
-  //  @NotNull(message = "Booking date cannot be null")
     private LocalDateTime bookingDate;
 
-//    @NotNull(message = "Status cannot be null")
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    @Min(value = 1, message = "Quantity must be at least 1")
+    private int quantity = 1; // Default to 1 if not specified
 
     public enum Status {
         BOOKED, CANCELLED
@@ -51,6 +52,9 @@ public class Ticket {
         }
         if (status == null) {
             status = Status.BOOKED;
+        }
+        if (quantity <= 0) {
+            quantity = 1; // Ensure quantity is at least 1
         }
     }
 }

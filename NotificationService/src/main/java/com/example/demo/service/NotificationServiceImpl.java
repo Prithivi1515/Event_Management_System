@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,13 +13,12 @@ import com.example.demo.dto.User;
 import com.example.demo.exception.EventNotFoundException;
 import com.example.demo.exception.NotificationNotFoundException;
 import com.example.demo.exception.UserNotFoundException;
+import com.example.demo.feignclient.EventClient;
+import com.example.demo.feignclient.UserClient;
 import com.example.demo.model.Notification;
 import com.example.demo.repository.NotificationRepository;
 
 import lombok.AllArgsConstructor;
-
-import com.example.demo.feignclient.EventClient;
-import com.example.demo.feignclient.UserClient;
 
 @Service
 @AllArgsConstructor
@@ -31,6 +31,8 @@ public class NotificationServiceImpl implements NotificationService {
     private UserClient userClient;
 
     private EventClient eventClient;
+    
+    private EmailService emailService;
 
     @Override
     public Notification sendNotification(Notification notification) {
@@ -80,6 +82,39 @@ public class NotificationServiceImpl implements NotificationService {
         Notification savedNotification = notificationRepository.save(notification);
         logger.info("Notification sent successfully, ID: {}, user ID: {}, event ID: {}", 
                 savedNotification.getNotificationId(), savedNotification.getUserId(), savedNotification.getEventId());
+        
+        try {
+            // We already fetched the user above
+            User user1 = userClient.getUserById(notification.getUserId());
+            Event event1 = eventClient.getEventById(notification.getEventId());
+            
+            if (user1.getEmail() != null && !user1.getEmail().isEmpty()) {
+                String subject = "Event Notification: " + event1.getName();
+                
+                // Create HTML content with more details
+                String htmlContent = "<div style='font-family: Arial, sans-serif;'>" +
+                    "<h2>Event Notification</h2>" +
+                    "<p>Hello " + user1.getName() + ",</p>" +
+                    "<p>" + notification.getMessage() + "</p>" +
+                    "<h3>Event Details:</h3>" +
+                    "<p><strong>Name:</strong> " + event1.getName() + "</p>" +
+                    "<p><strong>Date:</strong> " + event1.getDate() + "</p>" +
+                    "<p><strong>Location:</strong> " + event1.getLocation() + "</p>" +
+                    "<p>Thank you for using our service.</p>" +
+                    "</div>";
+                
+                // Send email asynchronously to prevent blocking
+                CompletableFuture.runAsync(() -> {
+                    emailService.sendEmail(user.getEmail(), subject, htmlContent);
+                });
+            } else {
+                logger.warn("User with ID: {} has no email address, notification sent to database only", 
+                    notification.getUserId());
+            }
+        } catch (Exception e) {
+            // Log the error but don't fail the notification (it's already saved to DB)
+            logger.error("Error sending email notification: {}", e.getMessage(), e);
+        }
         
         return savedNotification;
     }
